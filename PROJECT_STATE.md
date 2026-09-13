@@ -1,0 +1,695 @@
+# Zamp Cap Assignment — Project State
+
+Last updated: 2026-09-14
+Repository: ~/zamp-cap-assignment
+
+## 1. Assignment
+
+Candidate must deploy Cap for Halden Pharma, a regulated/audited customer where security has veto power.
+
+Customer constraints:
+
+- Deployment is into a namespace on a shared Kubernetes cluster.
+- FDE does not receive cluster-admin access.
+- All egress goes through a proxy.
+- Proxy default is deny.
+- Proxy terminates TLS.
+- Customer CA is available.
+- Images must come from the customer's private registry.
+- Runners have no outbound access.
+- Customer cluster already has admission/policy controls.
+- Nothing may leave the network.
+- No telemetry or license checks.
+- Changes happen in a Thursday change window.
+- If something breaks, roll back rather than fix-forward.
+
+Assignment requires:
+
+- Customer-like environment as code.
+- One-command environment bring-up.
+- Default-deny egress.
+- TLS interception.
+- Private registry only.
+- Admission control.
+- Namespace-scoped RBAC.
+- Runner with no egress.
+- Nothing leaving the environment.
+- At least one real constraint that fights the deployment.
+- Terraform for cloud primitives.
+- Helm for workload deployment.
+- One command from nothing to working.
+- Two targets:
+  - constrained local/customer-like cluster
+  - one real cloud
+- Policy files rather than prose.
+- Allowlist entries must contain:
+  - FQDN
+  - port
+  - component
+  - what breaks without it
+  - install-time or permanent
+- Commit proxy denial log from a clean install.
+- Put proxy into full deny after installation and prove application still serves.
+- Record one zero-to-working install uncut.
+- `decisions.md`
+- `runbook.md`
+- `security-review.md`
+
+Strong evaluation signals:
+- constraint fidelity
+- evidence
+- diagnosis when visibility is limited
+- least privilege
+- image/supply-chain completeness
+- reversibility
+- documentation
+- depth over breadth
+
+The assignment explicitly says the environment must enforce default-deny egress, TLS interception, private registry only, admission control, namespace-scoped RBAC, a no-egress runner, and nothing leaving. It also requires actual proxy denial evidence and an air-gap test.
+
+## 2. Source Application
+
+Upstream Cap repository:
+
+~/cap
+
+Source:
+https://github.com/CapSoftware/Cap
+
+Cap ships as Docker Compose only. We must not modify the application.
+
+Main runtime components:
+
+- Next.js web application
+- FFmpeg media server
+- MySQL
+- S3-compatible object storage
+- MinIO used for self-hosted object storage
+- MinIO mc setup job
+
+No upstream Kubernetes manifests/Helm chart existed.
+
+## 3. Local Environment
+
+Mac:
+- Apple Silicon / arm64
+- Rancher Desktop 1.24.0
+- Kubernetes 1.36.4
+- Moby/Docker runtime selected
+- Docker 29.6.2-rd
+- Kubernetes node runtime observed as docker://29.5.3
+- kubectl client 1.37.0
+- Kustomize 5.8.1
+- Context: rancher-desktop
+- Node: lima-rancher-desktop
+- IngressClass: traefik
+- StorageClass: local-path (default)
+
+Important decision:
+We are keeping Moby for the local environment to avoid changing runtime mid-implementation.
+
+Earlier Moby recommendation was too strong; final decision is to keep it because we already validated the private-registry flow and isolate the Moby-specific bootstrap to local environment code.
+
+## 4. Current Repository Structure
+
+Important files/directories:
+
+- architecture.md
+- decisions.md
+- runbook.md
+- security-review.md
+- helm/cap/
+- policies/
+- verification/
+- verification/logs/
+- verification/egress/
+- environment/
+- scripts/
+- secrets/
+
+`secrets/local-values.yaml` contains real local credentials and is gitignored.
+
+NEVER copy secret values into:
+- PROJECT_STATE.md
+- decisions.md
+- runbook.md
+- security-review.md
+- chat messages
+- git commits
+
+## 5. Helm Deployment
+
+Chart:
+helm/cap/
+
+Current release:
+- Helm release: cap
+- namespace: cap
+- application version: 0.6.0
+
+Known healthy Cap resources:
+- cap-web Deployment
+- cap-media-server Deployment
+- cap-minio StatefulSet
+- cap-mysql StatefulSet
+- cap-web Service
+- cap-media-server Service
+- cap-minio Service
+- cap-mysql Service
+- cap Ingress
+- cap ServiceAccount
+- cap secrets/config
+
+Previously verified baseline:
+- web -> MySQL TCP works
+- web -> MinIO health works
+- web -> media-server health works
+- web local HTTP works
+- ingress returns expected redirect to /login
+
+Current workload security:
+- web explicitly runAsUser 1001 / runAsGroup 1001
+- media server explicitly runAsUser 1001 / runAsGroup 1001
+- MinIO setup job is non-root
+- seccomp RuntimeDefault
+- allowPrivilegeEscalation false
+- all capabilities dropped
+- application ServiceAccount automount disabled
+
+## 6. Private Registry
+
+Local customer-like private registry:
+
+host.docker.internal:5001
+
+Registry:
+registry:2
+
+Registry was converted from HTTP to HTTPS.
+
+Customer-like local CA and registry certificate are generated by:
+
+environment/local-registry/generate-certs.sh
+
+Certificate files are gitignored.
+
+No insecure registry exception was added for the private registry.
+Docker insecure registry list remained only loopback ranges.
+
+Moby trust was provisioned through Rancher Desktop override.
+
+Private-registry Kubernetes image pull was successfully tested.
+
+Five repositories promoted:
+
+- cap/cap-web
+- cap/cap-media-server
+- cap/mysql
+- cap/minio
+- cap/minio-mc
+
+Registry API verification confirmed all five repositories/manifests.
+
+Important platform limitation:
+local Apple Silicon push reported that only available single-platform content was pushed; do not claim full multi-architecture preservation.
+
+## 7. Known Image Digests
+
+Previously observed/verified source image digests:
+
+cap-web:
+sha256:8ee4cbd3fd87f88f538831aed06c954c525db9c2426a62abeaf0ca307c5e1ce9
+
+cap-media-server:
+sha256:886ecc9b5684686410c691d13f94c678492b4ebaba3de0d295cdda63c64c04fe
+
+mysql:
+sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b
+
+minio:
+sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
+
+minio-mc:
+sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727
+
+IMPORTANT CURRENT GAP:
+The rendered Helm output currently falls back to public repositories:
+
+- ghcr.io/capsoftware/cap-web:latest
+- ghcr.io/capsoftware/cap-media-server:latest
+- mysql:8.0
+- quay.io/minio/minio:latest
+- quay.io/minio/mc:latest
+
+`secrets/local-values.yaml` currently contains no `images:` override.
+
+Before the next successful deployment, all five must be overridden to the private registry and pinned by digest.
+
+Expected target repository references:
+
+- host.docker.internal:5001/cap/cap-web@sha256:...
+- host.docker.internal:5001/cap/cap-media-server@sha256:...
+- host.docker.internal:5001/cap/mysql@sha256:...
+- host.docker.internal:5001/cap/minio@sha256:...
+- host.docker.internal:5001/cap/minio-mc@sha256:...
+
+Re-verify the exact registry-side digests before finalizing.
+
+## 8. NetworkPolicy
+
+Current model:
+- default-deny ingress and egress
+- DNS egress allowed
+- web -> MySQL allowed
+- web -> MinIO allowed
+- web -> media-server allowed
+- media-server -> web allowed
+- negative tests previously confirmed disallowed traffic
+- MinIO setup job has dedicated:
+  - egress to MinIO:9000
+  - MinIO ingress from setup job
+
+Important NetworkPolicy incident:
+Initially one NetworkPolicy name was accidentally reused for directional media->web rules, causing one policy to replace the other.
+
+We corrected this by using unique names:
+- allow-media-server-to-web
+- allow-media-server-to-web-ingress
+
+Evidence:
+verification/logs/networkpolicy-media-to-web-incident.txt
+
+This incident should remain documented as a real deployment constraint/failure.
+
+## 9. External Egress Investigation
+
+Candidate external endpoints investigated:
+
+### S3
+- FQDN: s3.amazonaws.com
+- port: 443
+- relevant to Cap's upstream/default S3 path
+- not required for self-hosted deployment
+- replaced by internal MinIO
+- baseline public S3 access blocked
+
+Evidence:
+verification/egress/candidate-endpoints.md
+verification/logs/s3-egress-investigation.txt
+
+### Tinybird
+- optional
+- TINYBIRD_HOST unset in deployment
+- no baseline external access
+
+Evidence:
+verification/logs/tinybird-egress-investigation.txt
+
+### cap.so / Vercel
+- optional rate-limiting / Vercel integration paths
+- VERCEL_* unset
+- no baseline external access
+
+Evidence:
+verification/logs/cap-so-vercel-investigation.txt
+
+### Sentry / OpenTelemetry
+- tracing libraries present
+- no external endpoint configured
+- SENTRY_DSN unset
+- OTEL exporter endpoints unset
+- no baseline telemetry egress
+
+Evidence:
+verification/logs/sentry-otel-egress-investigation.txt
+
+No unnecessary external runtime egress should be introduced.
+
+## 10. MinIO Setup Job
+
+File:
+helm/cap/templates/job-minio-setup.yaml
+
+Security posture:
+- post-install,post-upgrade hook
+- non-root UID/GID 1000
+- runAsNonRoot true
+- seccomp RuntimeDefault
+- allowPrivilegeEscalation false
+- drop ALL capabilities
+- Kubernetes ServiceAccount token automount disabled
+- private registry image intended
+- idempotent bucket creation
+
+Current correct command order:
+
+1. mc alias set capminio
+2. wait using `mc ready capminio`
+3. mc mb capminio/cap --ignore-existing
+4. print MINIO_BUCKET_READY
+
+HOME is explicitly /tmp.
+
+## 11. MinIO Failure History
+
+Failure 1:
+The setup Job ran non-root UID/GID 1000 and mc attempted to create /.mc.
+
+Observed:
+mc: <ERROR> Unable to save new mc config. mkdir /.mc: permission denied.
+
+Fix:
+set HOME=/tmp.
+
+Evidence:
+verification/logs/minio-setup-hook-failure.txt
+
+Failure 2:
+After HOME=/tmp, the hook still timed out because it used:
+
+mc ready "http://cap-minio:9000"
+
+Observed:
+mc: <ERROR> Couldn't construct anonymous client for `http://cap-minio:9000`.
+
+Diagnosis:
+mc ready expects a configured alias/target.
+
+Direct manual validation inside the failed hook pod proved:
+
+mc alias set capminio
+mc ready capminio
+mc mb capminio/cap --ignore-existing
+
+all succeed.
+
+Therefore:
+- network path works
+- DNS/service works
+- MinIO is reachable
+- MinIO credentials work
+- HOME fix works
+- mc works
+- command ordering was the remaining problem
+
+Correct chart fix:
+configure alias first, then call `mc ready capminio`.
+
+The failed upgrade was rolled back by Helm.
+
+Observed Helm history:
+- revision 4 failed
+- rollback succeeded
+- revision 5 deployed
+- second failure revision 6
+- rollback revision 7 deployed
+
+This is useful rollback evidence and should be retained.
+
+## 12. RBAC
+
+Assignment requirement:
+namespace-scoped RBAC, no cluster-admin.
+
+Design:
+
+Application ServiceAccount:
+- named cap
+- automountServiceAccountToken: false
+- no RoleBinding
+- application does not need Kubernetes API access
+
+Separate deployer identity:
+- ServiceAccount cap-deployer
+- Role cap-deployer
+- RoleBinding cap-deployer
+- all namespace-scoped in cap namespace
+- no ClusterRole
+- no ClusterRoleBinding
+
+Current Role permissions intended for resources actually managed by chart:
+
+Core:
+- configmaps
+- secrets
+- services
+- serviceaccounts
+- persistentvolumeclaims
+
+apps:
+- deployments
+- statefulsets
+
+batch:
+- jobs
+
+networking.k8s.io:
+- ingresses
+- networkpolicies
+
+verbs:
+- get
+- list
+- watch
+- create
+- update
+- patch
+- delete
+
+Read-only operational diagnostics:
+- pods
+- events
+- pods/log
+
+Do NOT add permissions simply because Helm might need them.
+
+Expected explicit denies:
+- nodes
+- namespaces
+- clusterroles
+- clusterrolebindings
+- persistentvolumes
+- secrets in kube-system
+
+RBAC template:
+helm/cap/templates/rbac.yaml
+
+RBAC values:
+rbac:
+  deployer:
+    create: true
+
+Already verified:
+- helm lint passes
+- rendered output contains Role/RoleBinding
+- rendered output contains no ClusterRole/ClusterRoleBinding
+- server-side dry-run passes
+
+Pending:
+- successful release must exist with the new Role/RoleBinding
+- run positive kubectl auth can-i tests
+- run negative kubectl auth can-i tests
+- test cross-namespace access
+- verify application SA still has automount=false
+- create verification/logs/rbac-verification.txt
+- update security-review.md
+- update runbook.md
+- update decisions.md
+- commit
+
+Important customer model:
+In the actual customer/shared-cluster model, platform team should provision/provide the namespace and the required namespace-scoped deployment access.
+FDE should not require ability to create namespaces or cluster-scoped RBAC.
+
+## 13. Current Git / Evidence Discipline
+
+Significant commits already made include:
+
+314f8db initial Helm deployment structure
+163af6d hardened workload runtime + baseline verification
+644335b baseline connectivity verification
+e10ad60 hardened cluster network policies
+78a81ef external egress investigations
+4a20d11 image provenance inventory
+8ce2656 private registry deployment controls
+ca61864 final private-registry verification
+fb7c0bb ignore local registry TLS material
+411d379 portable local registry TLS bootstrap
+324505e final private-registry verification archive
+
+Also:
+- MinIO hook failure evidence has been committed separately by the user.
+- Verify actual latest commit/status with:
+  git status --short
+  git log --oneline -12
+
+DO NOT assume the commit list above is complete/current. Check Git.
+
+## 14. Current Known Issue / Immediate Task
+
+DO NOT run Helm upgrade yet.
+
+Immediate work:
+
+1. Update/fix MinIO setup Job command ordering:
+   mc alias set
+   then mc ready capminio
+   then mc mb
+
+2. Confirm:
+   helm lint
+   helm template
+   server dry-run
+
+3. Fix private registry values for ALL FIVE images:
+   - web
+   - media server
+   - mysql
+   - minio
+   - minio-mc
+
+4. Pin all five by verified sha256 digest.
+
+5. Render again and assert:
+   - every workload image starts with host.docker.internal:5001/
+   - every workload image uses @sha256
+   - no public registry image remains
+
+6. Only after that:
+   - delete stale failed hook if present
+   - helm upgrade with --rollback-on-failure
+   - confirm hook success
+   - verify Cap pods
+   - verify MinIO bucket
+   - verify private registry use
+
+7. Finish RBAC verification and evidence.
+
+## 15. Remaining Assignment Work
+
+After RBAC is complete:
+
+### Admission Control
+Build a customer-like admission control mechanism using the cluster's available/native capabilities where practical.
+
+Need to demonstrate:
+- policy is enforced
+- non-compliant workload is rejected
+- compliant Cap workload is accepted
+- cluster-wide controls are clearly distinguished from FDE namespace permissions
+
+Need policy files and evidence.
+
+### Proxy + TLS Interception
+Need:
+- customer-like forward proxy
+- customer CA
+- TLS interception
+- default deny
+- explicit allowlist file
+- every allowlist entry:
+  - FQDN
+  - port
+  - component
+  - what breaks without it
+  - install-time/permanent
+
+Need actual proxy denial log from a clean install.
+
+Do not weaken the cage simply to eliminate denials.
+
+### Air-gap proof
+After application is installed:
+- put proxy into full-deny mode
+- prove application still serves
+- capture evidence
+
+### No-egress runner
+Create a runner that has no route out.
+Demonstrate it cannot reach external endpoints.
+Keep it consistent with customer statement that runners have no outbound.
+
+### Supply chain
+Complete image inventory.
+Ensure every deployed image:
+- is identified
+- is promoted to private registry
+- is pinned/verified
+- has provenance documented
+- does not accidentally pull from public registry during customer install
+
+### Rollback
+Need explicit proof of:
+- failed/half-applied upgrade
+- rollback to last known good state
+- application restored
+- evidence log
+
+Use current Helm rollback behavior but create a deliberate controlled test later.
+
+### Uninstall
+Need:
+- uninstall release
+- verify no application-owned resources remain
+- explicitly document namespace ownership behavior
+- local cleanup should leave disposable environment clean
+
+### Terraform / Real Cloud
+Need:
+- Terraform cloud primitives
+- one actual cloud target
+- same Helm workload abstraction
+- customer-like restrictions where practical
+- one-command install
+- verify installation from clean state
+
+### Final recording
+One zero-to-working uncut install.
+Need preparation so no hidden manual steps are required.
+
+## 16. Final Documentation
+
+`decisions.md`:
+- every meaningful technical decision
+- chosen option
+- alternatives rejected
+- reason
+- tradeoff
+- anything intentionally cut/deferred
+- include real failures and remediation
+
+`runbook.md`:
+- prerequisites
+- platform bootstrap assumptions
+- clean install
+- upgrade
+- rollback
+- rollback from half-applied state
+- uninstall
+- break-glass
+- verification commands
+- customer access model
+
+`security-review.md`:
+- every egress
+- reason
+- every permission
+- justification
+- data crossing boundary
+- private image verification
+- admission/security controls
+- residual risks
+
+## 17. Rules for Continuing This Project
+
+- Do not modify the Cap application itself.
+- Prefer evidence over prose.
+- Do not weaken a security control merely to make installation easier.
+- Before changing a control, diagnose the exact failure.
+- Preserve meaningful failures in verification/logs.
+- Do not claim something is verified unless a command/test proved it.
+- Do not guess current Git state; check it.
+- Do not expose or commit local secrets.
+- Do not use cluster-admin assumptions in the customer runbook.
+- Do not move to breadth at the expense of depth.
+- Before final submission, audit every assignment line item against actual evidence.
