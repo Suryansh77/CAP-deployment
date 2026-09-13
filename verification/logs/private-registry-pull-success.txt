@@ -1,0 +1,63 @@
+Private Registry Kubernetes Pull Success
+Date: 2026-09-14
+
+Objective
+--------
+Verify that the Kubernetes runtime can pull a workload image from the
+customer-like private registry over HTTPS using the customer-like trusted CA.
+
+Test image
+----------
+host.docker.internal:5001/cap/mysql:8.0
+
+Namespace
+---------
+cap
+
+Node
+----
+lima-rancher-desktop
+
+Preconditions
+-------------
+- Private registry exposed over HTTPS on port 5001.
+- Registry certificate issued for host.docker.internal.
+- Local Halden Pharma CA installed into the Moby registry trust path:
+  /etc/docker/certs.d/host.docker.internal:5001/ca.crt
+- Kubernetes node remained Ready.
+
+Result
+------
+Pod successfully transitioned to Running.
+
+Observed:
+  STATUS: Running
+  READY: 1/1
+
+Container output:
+  PRIVATE_REGISTRY_PULL_OK
+
+Conclusion
+----------
+The Kubernetes runtime can successfully pull a private-registry image over
+HTTPS after the registry CA is trusted by the Moby runtime.
+
+This validates the end-to-end path:
+
+  Kubernetes workload
+       ->
+  Moby runtime
+       ->
+  HTTPS private registry
+       ->
+  trusted customer-like CA
+       ->
+  image successfully pulled
+
+This replaces the earlier insecure HTTP registry transport failure.
+
+Evidence boundary
+-----------------
+This test validates the local customer-like registry and Moby runtime path.
+The final workload manifests remain runtime-neutral and should not depend on
+Moby-specific configuration in a customer environment.

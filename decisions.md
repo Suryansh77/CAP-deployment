@@ -471,3 +471,43 @@ The following are intentionally not treated as complete yet:
 
 These remain explicit work items rather than being represented as completed.
 
+
+---
+
+## 20. Private registry TLS remediation
+
+### Problem
+The initial Kubernetes pull from the local private registry failed because
+the Moby runtime attempted HTTPS while the registry served HTTP.
+
+### Decision
+Use HTTPS for the local customer-like private registry rather than relying
+on an insecure-registry exception.
+
+### Implementation
+- Created a local customer-like Halden Pharma CA.
+- Issued a registry certificate for `host.docker.internal`.
+- Recreated the registry using the existing persistent registry volume.
+- Configured the registry to serve HTTPS.
+- Provisioned the public CA certificate into the Moby registry trust path.
+- Kept the CA private key on the host and out of the runtime.
+
+### Verification
+The same Kubernetes image-pull test subsequently succeeded:
+`PRIVATE_REGISTRY_PULL_OK`
+
+Pod status:
+`Running`, `1/1`
+
+### Rejected
+Continuing with a plain HTTP registry plus an insecure-registry exception as the
+final architecture.
+
+### Reason
+HTTPS better models the regulated customer environment and provides a proper
+certificate trust boundary. The final workload architecture remains
+runtime-neutral.
+
+### Evidence
+- `verification/logs/private-registry-pull-failure.txt`
+- `verification/logs/private-registry-pull-success.txt`
