@@ -1,0 +1,90 @@
+# Default values for the Cap Helm chart.
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: false
+  name: ""
+
+images:
+  web:
+    repository: ghcr.io/capsoftware/cap-web
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  mediaServer:
+    repository: ghcr.io/capsoftware/cap-media-server
+    tag: latest
+    pullPolicy: IfNotPresent
+
+  mysql:
+    repository: mysql
+    tag: "8.0"
+    pullPolicy: IfNotPresent
+
+  minio:
+    repository: quay.io/minio/minio
+    tag: latest
+    pullPolicy: IfNotPresent
+
+web:
+  replicaCount: 1
+  service:
+    port: 3000
+
+mediaServer:
+  replicaCount: 1
+  service:
+    port: 3456
+
+mysql:
+  service:
+    port: 3306
+  persistence:
+    size: 10Gi
+    storageClass: ""
+
+minio:
+  service:
+    port: 9000
+  persistence:
+    size: 20Gi
+    storageClass: ""
+
+ingress:
+  enabled: true
+  className: traefik
+  host: cap.local
+  tls:
+    enabled: false
+    secretName: cap-tls
+
+secrets:
+  create: true
+
+  # Development-only defaults for the local baseline.
+  # These will NOT be used for the final customer deployment.
+  nextAuthSecret: ""
+  databaseEncryptionKey: ""
+  mediaServerWebhookSecret: ""
+
+  mysqlPassword: ""
+  mysqlRootPassword: ""
+  minioRootUser: ""
+  minioRootPassword: ""
+
+config:
+  capUrl: http://cap.local
+
+  database:
+    name: cap
+    user: cap
+
+  s3:
+    bucket: cap
+    region: us-east-1
+    publicEndpoint: http://minio:9000
+    internalEndpoint: http://minio:9000
+    pathStyle: true

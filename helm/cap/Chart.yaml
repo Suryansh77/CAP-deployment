@@ -1,0 +1,6 @@
+apiVersion: v2
+name: cap
+description: Helm chart for deploying the Cap self-hosted stack on Kubernetes
+type: application
+version: 0.1.0
+appVersion: "0.6.0"

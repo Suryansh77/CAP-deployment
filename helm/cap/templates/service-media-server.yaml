@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cap.fullname" . }}-media-server
+  labels:
+    {{- include "cap.labels" . | nindent 4 }}
+    app.kubernetes.io/component: media-server
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: {{ include "cap.name" . }}
+    app.kubernetes.io/component: media-server
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - name: http
+      port: {{ .Values.mediaServer.service.port }}
+      targetPort: http
+      protocol: TCP

@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cap.fullname" . }}-media-server
+  labels:
+    {{- include "cap.labels" . | nindent 4 }}
+    app.kubernetes.io/component: media-server
+spec:
+  replicas: {{ .Values.mediaServer.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "cap.name" . }}
+      app.kubernetes.io/component: media-server
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "cap.name" . }}
+        app.kubernetes.io/component: media-server
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ include "cap.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      containers:
+        - name: media-server
+          image: "{{ .Values.images.mediaServer.repository }}:{{ .Values.images.mediaServer.tag }}"
+          imagePullPolicy: {{ .Values.images.mediaServer.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.mediaServer.service.port }}
+              protocol: TCP
+          env:
+            - name: PORT
+              value: {{ .Values.mediaServer.service.port | quote }}
+            - name: MEDIA_SERVER_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "cap.fullname" . }}-secrets
+                  key: MEDIA_SERVER_WEBHOOK_SECRET
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3

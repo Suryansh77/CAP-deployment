@@ -24,6 +24,8 @@ The goal is to minimize unnecessary external dependencies and keep the customer'
 
 The Kubernetes deployment will preserve the core architecture of Cap's existing self-hosted Compose deployment.
 
+~~~
+
                        User / Cap Desktop
                               |
                               v
@@ -51,6 +53,7 @@ The Kubernetes deployment will preserve the core architecture of Cap's existing 
                                                    v
                                                Cap Web
                                     
+~~~
 
 ## 4. Kubernetes Resource Model
 

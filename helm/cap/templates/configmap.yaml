@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cap.fullname" . }}-config
+  labels:
+    {{- include "cap.labels" . | nindent 4 }}
+data:
+  NODE_ENV: "production"
+  WEB_URL: {{ .Values.config.capUrl | quote }}
+  NEXTAUTH_URL: {{ .Values.config.capUrl | quote }}
+
+  CAP_AWS_BUCKET: {{ .Values.config.s3.bucket | quote }}
+  CAP_AWS_REGION: {{ .Values.config.s3.region | quote }}
+  S3_PUBLIC_ENDPOINT: {{ .Values.config.s3.publicEndpoint | quote }}
+  S3_INTERNAL_ENDPOINT: {{ .Values.config.s3.internalEndpoint | quote }}
+  S3_PATH_STYLE: {{ .Values.config.s3.pathStyle | quote }}
+
+  MEDIA_SERVER_URL: "http://{{ include "cap.fullname" . }}-media-server:{{ .Values.mediaServer.service.port }}"
+  MEDIA_SERVER_WEBHOOK_URL: "http://{{ include "cap.fullname" . }}-web:{{ .Values.web.service.port }}"
