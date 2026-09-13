@@ -32,19 +32,21 @@ spec:
             - /bin/sh
             - -ec
             - |
-              until mc ready "http://{{ include "cap.fullname" . }}-minio:{{ .Values.minio.service.port }}"; do
-                sleep 2
-              done
-
               mc alias set capminio \
                 "http://{{ include "cap.fullname" . }}-minio:{{ .Values.minio.service.port }}" \
                 "$MINIO_ROOT_USER" \
                 "$MINIO_ROOT_PASSWORD"
 
+              until mc ready capminio; do
+                sleep 2
+              done
+
               mc mb "capminio/{{ .Values.config.s3.bucket }}" --ignore-existing
 
               echo "MINIO_BUCKET_READY"
           env:
+            - name: HOME
+              value: /tmp
             - name: MINIO_ROOT_USER
               valueFrom:
                 secretKeyRef:

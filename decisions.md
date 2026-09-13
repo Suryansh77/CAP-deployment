@@ -457,7 +457,6 @@ The following are intentionally not treated as complete yet:
 - customer TLS-intercepting proxy
 - external proxy allowlist implementation
 - admission control
-- namespace-scoped RBAC verification
 - no-egress runner
 - private-registry-only end-to-end install
 - proxy denial-log capture
@@ -470,7 +469,6 @@ The following are intentionally not treated as complete yet:
 - final walkthrough/recording
 
 These remain explicit work items rather than being represented as completed.
-
 
 ---
 
@@ -511,3 +509,116 @@ runtime-neutral.
 ### Evidence
 - `verification/logs/private-registry-pull-failure.txt`
 - `verification/logs/private-registry-pull-success.txt`
+
+---
+
+## 21. Namespace-scoped RBAC
+
+### Decision
+
+Use a separate `cap-deployer` ServiceAccount bound to a namespaced
+`cap-deployer` Role and RoleBinding.
+
+Cap application workloads continue using the `cap` ServiceAccount with
+`automountServiceAccountToken: false`.
+
+### Why
+
+The customer provides a namespace on a shared cluster and explicitly does not
+grant cluster-admin access to the FDE.
+
+The deployment therefore cannot depend on cluster-scoped permissions.
+
+Separating the deployment identity from the application identity also ensures
+that the application does not inherit deployment privileges that it does not
+need.
+
+### Permission model
+
+The deployment identity can manage only the resource types required by the Cap
+Helm release inside the application namespace.
+
+Read-only Pod and Event permissions and Pod log access are included for
+namespace-scoped verification and troubleshooting.
+
+No cluster-scoped permissions are granted.
+
+### Alternatives rejected
+
+Using the built-in `edit` or `admin` ClusterRole was rejected because those
+permissions are broader than necessary and would violate the intended
+least-privilege model.
+
+Granting deployment privileges to the application ServiceAccount was rejected
+because the Cap application has no requirement to access the Kubernetes API.
+
+### Verification
+
+The following were verified:
+
+- Role and RoleBinding exist in the `cap` namespace.
+- The rendered chart contains no ClusterRole or ClusterRoleBinding.
+- Required namespace operations return `yes`.
+- Cluster-scoped operations return `no`.
+- Cross-namespace operations return `no`.
+- Application ServiceAccount token automount is disabled.
+- Application ServiceAccount cannot access the tested Kubernetes resources.
+
+Evidence:
+
+`verification/logs/rbac-verification.txt`
+
+---
+
+## 22. MinIO Setup Hook Remediation
+
+### Problem
+
+The hardened MinIO setup Job initially failed because the non-root `mc`
+process attempted to create its configuration directory under `/.mc`.
+
+### Decision
+
+Keep the Job non-root and provide it with a writable temporary HOME:
+
+`HOME=/tmp`
+
+A second failure then exposed incorrect use of `mc ready` with a raw endpoint.
+
+### Root cause
+
+`mc ready` requires a configured `mc` target/alias.
+
+### Final implementation
+
+The hook now performs:
+
+1. `mc alias set capminio`
+2. `mc ready capminio`
+3. `mc mb capminio/cap --ignore-existing`
+
+### Verification
+
+The corrected command sequence was manually validated from the running hook
+pod.
+
+The subsequent Helm upgrade completed successfully as revision 8.
+
+### Security tradeoff
+
+No security control was relaxed.
+
+The Job remains:
+
+- non-root
+- `runAsNonRoot: true`
+- `allowPrivilegeEscalation: false`
+- all capabilities dropped
+- `RuntimeDefault` seccomp
+- ServiceAccount token automount disabled
+
+### Evidence
+
+- `verification/logs/minio-setup-hook-failure.txt`
+- Helm history showing failed upgrade and rollback
+- successful Helm revision 8

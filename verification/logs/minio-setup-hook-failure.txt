@@ -1,0 +1,110 @@
+===== MINIO SETUP HOOK FAILURE =====
+Timestamp: 2026-09-13T21:27:58Z
+
+This is the failed post-upgrade hook from Helm revision 4.
+Root cause observed: mc attempted to create /.mc while running as non-root UID/GID 1000.
+
+===== HELM HISTORY =====
+REVISION	UPDATED                 	STATUS    	CHART    	APP VERSION	DESCRIPTION
+1       	Sun Sep 13 21:33:59 2026	superseded	cap-0.1.0	0.6.0      	Install complete
+2       	Sun Sep 13 22:26:02 2026	superseded	cap-0.1.0	0.6.0      	Upgrade complete
+3       	Sun Sep 13 22:29:34 2026	superseded	cap-0.1.0	0.6.0      	Upgrade complete
+4       	Mon Sep 14 02:41:43 2026	failed    	cap-0.1.0	0.6.0      	Upgrade "cap" failed: post-upgrade hooks failed: resource Job/cap/cap-minio-setup not ready. status: InProgress, message: Job in progr...
+5       	Mon Sep 14 02:51:46 2026	deployed  	cap-0.1.0	0.6.0      	Rollback to 3
+
+===== JOB =====
+NAME              STATUS    COMPLETIONS   DURATION   AGE   CONTAINERS    IMAGES                    SELECTOR
+cap-minio-setup   Running   0/1           16m        16m   minio-setup   quay.io/minio/mc:latest   batch.kubernetes.io/controller-uid=62b4b3ea-95a6-4feb-8e2b-362fc18a01cd
+
+===== JOB DESCRIPTION =====
+Name:             cap-minio-setup
+Namespace:        cap
+Selector:         batch.kubernetes.io/controller-uid=62b4b3ea-95a6-4feb-8e2b-362fc18a01cd
+Labels:           app.kubernetes.io/component=minio-setup
+                  app.kubernetes.io/instance=cap
+                  app.kubernetes.io/managed-by=Helm
+                  app.kubernetes.io/name=cap
+                  app.kubernetes.io/version=0.6.0
+                  helm.sh/chart=cap-0.1.0
+Annotations:      helm.sh/hook: post-install,post-upgrade
+                  helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+                  helm.sh/hook-weight: 10
+Parallelism:      1
+Completions:      1
+Completion Mode:  NonIndexed
+Suspend:          false
+Backoff Limit:    6
+Start Time:       Mon, 14 Sep 2026 02:41:46 +0530
+Pods Statuses:    1 Active (1 Ready) / 0 Succeeded / 0 Failed
+Pod Template:
+  Labels:           app.kubernetes.io/component=minio-setup
+                    app.kubernetes.io/instance=cap
+                    app.kubernetes.io/name=cap
+                    batch.kubernetes.io/controller-uid=62b4b3ea-95a6-4feb-8e2b-362fc18a01cd
+                    batch.kubernetes.io/job-name=cap-minio-setup
+                    controller-uid=62b4b3ea-95a6-4feb-8e2b-362fc18a01cd
+                    job-name=cap-minio-setup
+  Service Account:  cap
+  Containers:
+   minio-setup:
+    Image:      quay.io/minio/mc:latest
+    Port:       <none>
+    Host Port:  <none>
+    Command:
+      /bin/sh
+      -ec
+      until mc ready "http://cap-minio:9000"; do
+        sleep 2
+      done
+
+      mc alias set capminio \
+        "http://cap-minio:9000" \
+        "$MINIO_ROOT_USER" \
+        "$MINIO_ROOT_PASSWORD"
+
+      mc mb "capminio/cap" --ignore-existing
+
+      echo "MINIO_BUCKET_READY"
+
+    Environment:
+      MINIO_ROOT_USER:      <set to the key 'MINIO_ROOT_USER' in secret 'cap-secrets'>      Optional: false
+      MINIO_ROOT_PASSWORD:  <set to the key 'MINIO_ROOT_PASSWORD' in secret 'cap-secrets'>  Optional: false
+    Mounts:                 <none>
+  Volumes:                  <none>
+  Node-Selectors:           <none>
+  Tolerations:              <none>
+Events:
+  Type    Reason            Age   From            Message
+  ----    ------            ----  ----            -------
+  Normal  SuccessfulCreate  16m   job-controller  Created pod: cap-minio-setup-5xv2z
+
+===== JOB LOG =====
+mc: <ERROR> Unable to save new mc config. mkdir /.mc: permission denied.
+mc: <ERROR> Unable to save new mc config. mkdir /.mc: permission denied.
+mc: <ERROR> Unable to save new mc config. mkdir /.mc: permission denied.
+mc: <ERROR> Unable to save new mc config. mkdir /.mc: permission denied.
+mc: <ERROR> Unable to save new mc config. mkdir /.mc: permission denied.
+mc: <ERROR> Unable to save new mc config. mkdir /.mc: permission denied.
+mc: <ERROR> Unable to save new mc config. mkdir /.mc: permission denied.
+mc: <ERROR> Unable to save new mc config. mkdir /.mc: permission denied.
+mc: <ERROR> Unable to save new mc config. mkdir /.mc: permission denied.
+mc: <ERROR> Unable to save new mc config. mkdir /.mc: permission denied.
+
+===== SECOND FAILURE / ROOT CAUSE =====
+The first remediation set HOME=/tmp and preserved the non-root securityContext.
+The subsequent hook failed differently because `mc ready` was invoked with the raw
+MinIO URL instead of a configured mc alias.
+
+Observed error:
+mc: <ERROR> Couldn't construct anonymous client for `http://cap-minio:9000`.
+
+Diagnosis:
+`mc ready` expects a configured target/alias. The hook therefore must configure
+the alias first and then invoke `mc ready capminio`.
+
+Remediation:
+1. Configure the capminio alias with the existing MinIO credentials.
+2. Poll `mc ready capminio`.
+3. Create the bucket after readiness.
+
+Security posture was not relaxed.

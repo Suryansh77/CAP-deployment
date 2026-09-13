@@ -93,3 +93,6 @@ config:
     publicEndpoint: http://minio:9000
     internalEndpoint: http://minio:9000
     pathStyle: true
+rbac:
+  deployer:
+    create: true

@@ -1,0 +1,99 @@
+===== RBAC VERIFICATION =====
+Timestamp: 2026-09-13T22:20:15Z
+
+===== RELEASE =====
+NAME: cap
+LAST DEPLOYED: Mon Sep 14 03:37:34 2026
+NAMESPACE: cap
+STATUS: deployed
+REVISION: 8
+DESCRIPTION: Upgrade complete
+RESOURCES:
+==> v1/ConfigMap
+NAME         DATA   AGE
+cap-config   10     6h16m
+
+==> v1/RoleBinding
+NAME           ROLE                AGE
+cap-deployer   Role/cap-deployer   12m
+
+==> v1/Service
+NAME               TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+cap-media-server   ClusterIP   10.43.205.189   <none>        3456/TCP   6h16m
+cap-minio   ClusterIP   10.43.84.250   <none>   9000/TCP   6h16m
+cap-mysql   ClusterIP   None   <none>   3306/TCP   6h16m
+cap-web   ClusterIP   10.43.45.229   <none>   3000/TCP   6h16m
+
+==> v1/Pod(related)
+NAME                               READY   STATUS    RESTARTS   AGE
+cap-media-server-9f8996799-9dht4   1/1     Running   0          12m
+cap-web-8db6b96f7-srn7r   1/1   Running   1 (12m ago)   12m
+cap-minio-0   1/1   Running   0     12m
+cap-mysql-0   1/1   Running   0     12m
+
+==> v1/StatefulSet
+NAME        READY   AGE
+cap-minio   1/1     6h16m
+cap-mysql   1/1   6h16m
+
+==> v1/Secret
+NAME          TYPE     DATA   AGE
+cap-secrets   Opaque   10     6h16m
+
+==> v1/Role
+NAME           CREATED AT
+cap-deployer   2026-09-13T22:07:35Z
+
+==> v1/Deployment
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+cap-media-server   1/1     1            1           6h16m
+cap-web   1/1   1     1     6h16m
+
+==> v1/Ingress
+NAME   CLASS     HOSTS       ADDRESS        PORTS   AGE
+cap    traefik   cap.local   192.168.64.2   80      6h16m
+
+==> v1/ServiceAccount
+NAME           AGE
+cap-deployer   12m
+cap   6h16m
+
+
+TEST SUITE: None
+
+===== NAMESPACE RBAC OBJECTS =====
+NAME           AGE
+cap-deployer   12m
+NAME           CREATED AT
+cap-deployer   2026-09-13T22:07:35Z
+NAME           ROLE                AGE
+cap-deployer   Role/cap-deployer   12m
+
+===== RENDERED RBAC SCOPE =====
+kind: Role
+kind: RoleBinding
+
+===== POSITIVE CHECKS =====
+create deployments: yes
+patch secrets: yes
+create networkpolicies: yes
+get pods: yes
+get pods/log: yes
+
+===== CLUSTER-SCOPE DENIALS =====
+get nodes: no
+create namespaces: no
+create clusterroles: no
+create clusterrolebindings: no
+get persistentvolumes: no
+
+===== CROSS-NAMESPACE DENIALS =====
+get pods in kube-system: no
+get secrets in kube-system: no
+get pods in default: no
+
+===== APPLICATION SERVICE ACCOUNT =====
+automountServiceAccountToken=false
+app SA get pods: no
+app SA get secrets: no
+app SA get nodes: no
