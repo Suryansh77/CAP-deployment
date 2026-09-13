@@ -1,0 +1,41 @@
+S3 Egress Investigation
+=======================
+
+Component:
+Cap Web
+
+Purpose:
+Determine whether the deployed self-hosted Cap server requires
+public AWS S3 egress.
+
+Test 1: Public AWS S3
+
+Command:
+kubectl exec -n cap deploy/cap-web -- sh -c 'node -e "fetch(\"https://s3.amazonaws.com\").then(r=>{console.log(\"PUBLIC_S3_REACHABLE\",r.status);process.exit(1)}).catch(e=>{console.log(\"PUBLIC_S3_BLOCKED_OK\",e.message);process.exit(0)})"'
+
+Observed:
+PUBLIC_S3_BLOCKED_OK fetch failed
+
+Result:
+PASS — public S3 access is blocked.
+
+Test 2: Internal object storage
+
+Command:
+kubectl exec -n cap deploy/cap-web -- sh -c 'node -e "fetch(\"http://cap-minio:9000/minio/health/live\").then(r=>{console.log(\"INTERNAL_MINIO_STATUS\",r.status);process.exit(r.ok?0:1)}).catch(e=>{console.error(\"INTERNAL_MINIO_FAILED\",e.message);process.exit(1)})"'
+
+Observed:
+INTERNAL_MINIO_STATUS 200
+
+Result:
+PASS — Cap Web can reach the configured internal MinIO service.
+
+Decision:
+Do not permit public s3.amazonaws.com egress for the baseline
+self-hosted deployment.
+
+Required storage path:
+Cap Web -> internal MinIO -> TCP/9000.
+
+Classification:
+Internal runtime dependency, not external proxy egress.

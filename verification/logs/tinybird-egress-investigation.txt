@@ -1,0 +1,39 @@
+Tinybird Egress Investigation
+=============================
+
+Component:
+Cap Web
+
+Purpose:
+Determine whether external Tinybird analytics is a required runtime
+dependency for the Halden Pharma self-hosted deployment.
+
+Source evidence:
+- apps/web/app/api/analytics/track/route.ts obtains the Tinybird service
+  and calls tinybird.appendEvents().
+- packages/env/server.ts defines TINYBIRD_HOST and TINYBIRD_TOKEN as
+  optional environment variables.
+- packages/web-backend/src/Tinybird/index.ts disables the Tinybird service
+  when TINYBIRD_HOST and/or TINYBIRD_TOKEN are not configured.
+
+Deployment verification command:
+kubectl exec -n cap deploy/cap-web -- sh -c 'printf "TINYBIRD_HOST=%s\nTINYBIRD_TOKEN_SET=%s\n" "${TINYBIRD_HOST:-<unset>}" "$([ -n "${TINYBIRD_TOKEN:-}" ] && echo yes || echo no)"'
+
+Observed:
+TINYBIRD_HOST=<unset>
+TINYBIRD_TOKEN_SET=no
+
+Interpretation:
+Tinybird analytics is disabled in the deployed self-hosted configuration.
+
+Security decision:
+Do not permit external Tinybird egress for the baseline deployment.
+
+Classification:
+Optional analytics / telemetry dependency.
+Disabled by configuration.
+No permanent runtime allowlist entry.
+
+Customer requirement alignment:
+Supports the requirement that no telemetry or unnecessary data
+leaves the customer network.

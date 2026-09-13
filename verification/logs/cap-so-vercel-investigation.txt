@@ -1,0 +1,53 @@
+cap.so / Vercel Runtime Investigation
+=====================================
+
+Purpose:
+Determine whether the Halden Pharma self-hosted Cap deployment
+requires outbound access to cap.so or Vercel services.
+
+Source findings:
+
+1. Collection password rate limiting
+apps/web/actions/collections/password.ts constructs a cap.so URL
+for the Vercel Firewall rate-limit request.
+
+The implementation explicitly treats the Vercel Firewall as optional
+for self-hosted deployments. If the firewall is unavailable, password
+verification continues using the local password hash verification path.
+
+2. Download-link rate limiting
+apps/web/actions/send-download-link.ts constructs a cap.so URL for
+the Vercel Firewall rate-limit request before sending the email.
+
+3. Generic rate-limit helper
+apps/web/lib/rate-limit.ts uses @vercel/firewall for optional,
+best-effort rate limiting. The implementation documents that a missing
+Vercel Firewall configuration does not break self-hosted deployments.
+
+4. Vercel domain-management workflows
+The source contains api.vercel.com calls for Vercel-specific domain
+management. These require VERCEL_TEAM_ID, VERCEL_PROJECT_ID and
+VERCEL_AUTH_TOKEN and are separate from the baseline self-hosted
+Cap deployment.
+
+Deployment conclusion:
+
+The Halden baseline deployment does not configure Vercel-specific
+environment variables and does not require Vercel services for the
+core self-hosted application.
+
+Security decision:
+
+Do not permit cap.so or api.vercel.com as baseline runtime egress.
+
+The absence of Vercel connectivity must not prevent the core
+self-hosted application from operating.
+
+Classification:
+Optional vendor-integrated functionality.
+
+Install-time or permanent:
+Neither for the baseline deployment.
+
+Final decision:
+BLOCK / no external allowlist entry.

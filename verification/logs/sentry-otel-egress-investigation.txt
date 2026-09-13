@@ -1,0 +1,59 @@
+Sentry / OpenTelemetry Egress Investigation
+Date: 2026-09-14
+
+Objective
+--------
+Determine whether the baseline self-hosted Cap deployment requires external
+Sentry or OpenTelemetry egress.
+
+Source-code evidence
+--------------------
+1. apps/web/lib/tracing.ts uses @effect/opentelemetry and
+   @opentelemetry/api to obtain the existing OpenTelemetry tracer provider
+   and create a tracer named "cap-web-backend".
+2. The inspected tracing implementation does not configure an external
+   exporter endpoint.
+3. The focused Sentry/telemetry search did not find an active Sentry
+   integration file under apps/web or packages.
+4. Search results containing "sentry-trace" and "baggage" were HTTP header
+   allowlists and do not by themselves establish external telemetry egress.
+
+Deployed runtime evidence
+-------------------------
+The running cap-web container was checked for common external telemetry
+configuration:
+
+SENTRY_DSN_SET=no
+OTEL_EXPORTER_OTLP_ENDPOINT_SET=no
+OTEL_EXPORTER_OTLP_TRACES_ENDPOINT_SET=no
+OTEL_SERVICE_NAME=<unset>
+
+Security conclusion
+-------------------
+The baseline self-hosted deployment has no configured external Sentry DSN
+or OTLP exporter endpoint. No baseline external telemetry destination was
+identified that requires proxy access.
+
+Decision
+--------
+BLOCK external Sentry / OpenTelemetry egress for the baseline deployment.
+No Sentry or external OTLP FQDN is added to the baseline proxy allowlist.
+
+Classification
+--------------
+Optional / non-required telemetry functionality.
+
+Install-time or permanent
+-------------------------
+Neither for the baseline deployment.
+
+What breaks without the egress
+------------------------------
+External telemetry/error-reporting functionality, if separately configured
+in a different deployment. Core baseline Cap serving is not dependent on it.
+
+Evidence boundary
+-----------------
+This proves that the submitted self-hosted baseline does not have external
+Sentry/OTLP configuration. It does not claim that every possible Cap
+deployment or optional configuration can never use external telemetry.
