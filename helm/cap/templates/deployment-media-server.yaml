@@ -38,6 +38,8 @@ spec:
                   name: {{ include "cap.fullname" . }}-secrets
                   key: MEDIA_SERVER_WEBHOOK_SECRET
           securityContext:
+            runAsUser: 1001
+            runAsGroup: 1001
             runAsNonRoot: true
             allowPrivilegeEscalation: false
             capabilities:

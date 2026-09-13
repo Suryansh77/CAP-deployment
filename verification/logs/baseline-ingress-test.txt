@@ -1,0 +1,12 @@
+Baseline Ingress Verification
+=============================
+
+Command:
+curl -i -H "Host: cap.local" http://192.168.64.2/
+
+Observed response:
+HTTP/1.1 307 Temporary Redirect
+Location: /login
+
+Interpretation:
+The request successfully traversed the Traefik Ingress and reached the Cap Web application. Cap Web returned its unauthenticated redirect to /login.
