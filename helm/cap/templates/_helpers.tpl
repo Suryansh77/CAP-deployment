@@ -60,3 +60,17 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Return an image reference.
+
+When digest is supplied, use repository@digest and ignore the tag.
+Otherwise use repository:tag.
+*/}}
+{{- define "cap.image" -}}
+{{- if .digest -}}
+{{ printf "%s@%s" .repository .digest }}
+{{- else -}}
+{{ printf "%s:%s" .repository .tag }}
+{{- end -}}
+{{- end -}}

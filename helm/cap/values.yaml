@@ -29,6 +29,11 @@ images:
     tag: latest
     pullPolicy: IfNotPresent
 
+  minioMc:
+    repository: quay.io/minio/mc
+    tag: latest
+    pullPolicy: IfNotPresent
+
 web:
   replicaCount: 1
   service:

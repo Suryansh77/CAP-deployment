@@ -24,7 +24,7 @@ spec:
       automountServiceAccountToken: false
       containers:
         - name: minio
-          image: "{{ .Values.images.minio.repository }}:{{ .Values.images.minio.tag }}"
+          image: "{{ include "cap.image" .Values.images.minio }}"
           imagePullPolicy: {{ .Values.images.minio.pullPolicy }}
           args:
             - server

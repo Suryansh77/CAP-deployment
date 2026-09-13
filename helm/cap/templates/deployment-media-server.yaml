@@ -23,7 +23,7 @@ spec:
       automountServiceAccountToken: false
       containers:
         - name: media-server
-          image: "{{ .Values.images.mediaServer.repository }}:{{ .Values.images.mediaServer.tag }}"
+          image: "{{ include "cap.image" .Values.images.mediaServer }}"
           imagePullPolicy: {{ .Values.images.mediaServer.pullPolicy }}
           ports:
             - name: http

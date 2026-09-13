@@ -22,7 +22,7 @@ spec:
       automountServiceAccountToken: false
       containers:
         - name: cap-web
-          image: "{{ .Values.images.web.repository }}:{{ .Values.images.web.tag }}"
+          image: "{{ include "cap.image" .Values.images.web }}"
           imagePullPolicy: {{ .Values.images.web.pullPolicy }}
           ports:
             - name: http

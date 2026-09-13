@@ -24,7 +24,7 @@ spec:
       automountServiceAccountToken: false
       containers:
         - name: mysql
-          image: "{{ .Values.images.mysql.repository }}:{{ .Values.images.mysql.tag }}"
+          image: "{{ include "cap.image" .Values.images.mysql }}"
           imagePullPolicy: {{ .Values.images.mysql.pullPolicy }}
           ports:
             - name: mysql

@@ -1,0 +1,76 @@
+Private Registry Kubernetes Pull Failure
+Date: 2026-09-14
+
+Objective
+--------
+Verify that the Kubernetes runtime can pull a workload image exclusively
+from the customer-like private registry.
+
+Test
+----
+Image:
+  host.docker.internal:5001/cap/mysql:8.0
+
+Namespace:
+  cap
+
+Node:
+  lima-rancher-desktop
+
+Initial result
+--------------
+Pod scheduled successfully, but the container could not start.
+
+Status:
+  ErrImagePull
+  followed by ImagePullBackOff
+
+Exact Kubernetes event
+----------------------
+Failed to pull image "host.docker.internal:5001/cap/mysql:8.0":
+Error response from daemon: failed to resolve reference
+"host.docker.internal:5001/cap/mysql:8.0":
+failed to do request:
+Head "https://host.docker.internal:5001/v2/cap/mysql/manifests/8.0":
+http: server gave HTTP response to HTTPS client
+
+Diagnosis
+--------
+Network-level connectivity to the registry is available, but the Kubernetes
+container runtime attempts to communicate with the registry using HTTPS.
+
+The local customer-like registry is currently exposed using plain HTTP.
+
+Therefore:
+  Kubernetes -> registry network path: reachable
+  Registry HTTP API: reachable from a test pod
+  Image pull through container runtime: FAILED
+
+The failure is caused by an HTTP/HTTPS protocol mismatch in the local
+registry configuration, not by the Kubernetes scheduling layer or the
+registry repository contents.
+
+Why this matters
+----------------
+This demonstrates that successful TCP connectivity to a private registry is
+not sufficient to prove Kubernetes can consume it. The container runtime's
+registry transport policy must also explicitly permit the configured
+registry protocol.
+
+Remediation direction
+---------------------
+Configure the local Rancher Desktop/container runtime to treat the local
+customer-like registry as an explicitly configured insecure HTTP registry,
+or provide TLS on the registry and trust the corresponding CA.
+
+Security consideration
+----------------------
+For the actual regulated customer design, TLS should be preferred.
+The HTTP registry is being used only as a local customer-like test
+environment and must not be presented as the production security model.
+
+Evidence boundary
+-----------------
+This log records the failed image-pull test and its exact runtime error.
+Successful private-registry image promotion and registry API manifest
+verification were performed separately.
