@@ -1,0 +1,55 @@
+Private Registry Final Verification
+Date: 2026-09-14
+
+Final objective
+---------------
+Verify the finalized customer-like private registry path after TLS
+configuration and Rancher Desktop restart.
+
+Registry
+--------
+host.docker.internal:5001
+
+Protocol
+--------
+HTTPS
+
+Trust model
+-----------
+The registry certificate is signed by the local customer-like CA.
+The CA is provisioned into the Moby registry trust path:
+
+/etc/docker/certs.d/host.docker.internal:5001/ca.crt
+
+No insecure-registry exception was added.
+
+Final Kubernetes test
+---------------------
+Namespace:
+  cap
+
+Image:
+  host.docker.internal:5001/cap/mysql:8.0
+
+Result:
+  Pod condition met
+  READY: 1/1
+  STATUS: Running
+
+Container output:
+  PRIVATE_REGISTRY_PULL_OK
+
+Conclusion
+----------
+The finalized local customer-like environment successfully pulls a workload
+image from the private registry over HTTPS with certificate validation.
+
+The Kubernetes workload itself remains runtime-neutral. Moby-specific CA
+provisioning is isolated to the local Rancher Desktop environment bootstrap.
+
+Earlier failure
+---------------
+An earlier pull failed because the registry served HTTP while the Moby runtime
+attempted HTTPS. That failure is preserved separately in:
+
+verification/logs/private-registry-pull-failure.txt
