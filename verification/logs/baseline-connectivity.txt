@@ -1,0 +1,49 @@
+Baseline Connectivity Verification
+==================================
+
+1. Ingress -> Cap Web
+
+Command:
+curl -i -H "Host: cap.local" http://192.168.64.2/
+
+Observed:
+HTTP/1.1 307 Temporary Redirect
+Location: /login
+
+Result:
+PASS
+
+2. Cap Web -> MySQL
+
+Command:
+kubectl exec -n cap deploy/cap-web -- sh -c 'node -e "...mysql connection test..."'
+
+Observed:
+MYSQL_CONNECT_OK
+
+Result:
+PASS
+
+3. Cap Web -> MinIO
+
+Observed:
+MINIO_HTTP_STATUS 200
+
+Result:
+PASS
+
+4. Cap Web -> Media Server
+
+Observed:
+MEDIA_SERVER_STATUS 200
+
+Result:
+PASS
+
+5. Cap Web local HTTP
+
+Observed:
+CAP_WEB_LOCAL_STATUS 200
+
+Result:
+PASS
