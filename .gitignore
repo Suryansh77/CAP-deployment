@@ -1,3 +1,10 @@
 .env
 secrets/
 *.secret
+
+# Local customer-like registry TLS material.
+# Generated locally; private keys must never be committed.
+environment/local-registry/certs/*.key
+environment/local-registry/certs/*.crt
+environment/local-registry/certs/*.csr
+environment/local-registry/certs/*.srl
