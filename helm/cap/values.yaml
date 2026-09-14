@@ -96,3 +96,6 @@ config:
 rbac:
   deployer:
     create: true
+admission:
+  enabled: true
+  allowedImageRegistry: "host.docker.internal:5001/"

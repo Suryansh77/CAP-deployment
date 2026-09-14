@@ -1,0 +1,130 @@
+===== ADMISSION CONTROL VERIFICATION =====
+Date: 2026-09-14
+Namespace: cap
+Policy: cap-private-registry
+Binding: cap-private-registry
+Enforcement: Deny
+Failure policy: Fail
+
+===== POLICY HEALTH =====
+
+Live policy:
+  kubectl get validatingadmissionpolicy cap-private-registry \
+    -o jsonpath='{.status.typeChecking.expressionWarnings}{"\n"}'
+
+Observed result:
+  No expression warnings returned.
+
+Observed generation:
+  observedGeneration=2
+
+Binding:
+  validationActions=["Deny"]
+
+===== TEST 1: PUBLIC MAIN CONTAINER =====
+
+Command:
+
+kubectl run admission-public-test \
+  -n cap \
+  --image=busybox:1.36 \
+  --restart=Never
+
+Observed result:
+
+Error from server (Forbidden): pods "admission-public-test" is forbidden:
+ValidatingAdmissionPolicy 'cap-private-registry' with binding
+'cap-private-registry' denied request:
+All Cap Pod container images, including init and ephemeral containers,
+must come from the approved private registry.
+
+Follow-up:
+
+kubectl get pod admission-public-test -n cap
+
+Observed result:
+
+Error from server (NotFound): pods "admission-public-test" not found
+
+Conclusion:
+PASS - public-registry Pod was rejected before creation.
+
+===== TEST 2: APPROVED PRIVATE IMAGE =====
+
+Command:
+
+kubectl run admission-private-test \
+  -n cap \
+  --image=host.docker.internal:5001/cap/minio-mc@sha256:37d109dddbbb2c95873f5fc81ac93f37023264770fc580a7564148892087b1b7 \
+  --restart=Never
+
+Observed result:
+
+pod/admission-private-test created
+
+Follow-up:
+
+kubectl get pod admission-private-test -n cap -o wide
+
+Observed result:
+
+Pod existed and was scheduled:
+  NAME: admission-private-test
+  STATUS: Error
+  READY: 0/1
+
+Note:
+The container subsequently exited, but this does not affect the
+admission result. The Pod creation request was accepted by admission.
+
+Conclusion:
+PASS - approved private-registry image was admitted.
+
+Cleanup:
+
+kubectl delete pod admission-private-test -n cap --ignore-not-found
+
+===== TEST 3: PUBLIC INIT CONTAINER BYPASS ATTEMPT =====
+
+Manifest characteristics:
+
+  Main container:
+    host.docker.internal:5001/cap/minio-mc@sha256:37d109dddbbb2c95873f5fc81ac93f37023264770fc580a7564148892087b1b7
+
+  Init container:
+    busybox:1.36
+
+Observed result:
+
+Error from server (Forbidden): error when creating "STDIN":
+pods "admission-init-public-test" is forbidden:
+ValidatingAdmissionPolicy 'cap-private-registry' with binding
+'cap-private-registry' denied request:
+All Cap Pod container images, including init and ephemeral containers,
+must come from the approved private registry.
+
+Follow-up:
+
+kubectl get pod admission-init-public-test -n cap
+
+Observed result:
+
+Error from server (NotFound): pods "admission-init-public-test" not found
+
+Conclusion:
+PASS - public init-container image cannot bypass the admission control.
+
+===== CONTROL CONCLUSION =====
+
+The admission control enforces the private-registry invariant for:
+
+  - normal containers
+  - init containers
+  - ephemeral containers
+
+The policy is scoped to the Cap namespace and uses Deny enforcement
+with fail-closed policy evaluation.
+
+The tests demonstrate both:
+  - rejection of non-compliant images
+  - acceptance of compliant private-registry images

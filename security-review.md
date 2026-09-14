@@ -57,6 +57,7 @@ The application ServiceAccount is not bound to the deployment Role.
 Reason:
 
 Cap does not require Kubernetes API access for normal application operation.
+
 Providing an API token would increase the attack surface without providing
 application functionality required by the deployment.
 
@@ -90,6 +91,7 @@ Deployment and namespace-scoped operational actions use:
 The identity is bound through:
 
     Role/cap-deployer
+
     RoleBinding/cap-deployer
 
 Both objects are namespaced to:
@@ -99,11 +101,13 @@ Both objects are namespaced to:
 The Helm chart renders:
 
     Role
+
     RoleBinding
 
 It does not render:
 
     ClusterRole
+
     ClusterRoleBinding
 
 Verification:
@@ -114,6 +118,7 @@ Verification:
 Observed:
 
     kind: Role
+
     kind: RoleBinding
 
 ---
@@ -157,19 +162,27 @@ No permission is granted for:
 The following operations returned `yes` for `cap-deployer`:
 
     create deployments: yes
+
     patch secrets: yes
+
     create networkpolicies: yes
+
     get pods: yes
+
     get pods/log: yes
 
 Commands used:
 
-    DEPLOYER="system:serviceaccount:cap:cap"
+    DEPLOYER="system:serviceaccount:cap:cap-deployer"
 
     kubectl auth can-i create deployments --as="$DEPLOYER" -n cap
+
     kubectl auth can-i patch secrets --as="$DEPLOYER" -n cap
+
     kubectl auth can-i create networkpolicies --as="$DEPLOYER" -n cap
+
     kubectl auth can-i get pods --as="$DEPLOYER" -n cap
+
     kubectl auth can-i get pods/log --as="$DEPLOYER" -n cap
 
 ### Cluster-scope denial
@@ -177,17 +190,25 @@ Commands used:
 The following operations returned `no`:
 
     get nodes: no
+
     create namespaces: no
+
     create clusterroles: no
+
     create clusterrolebindings: no
+
     get persistentvolumes: no
 
 Commands:
 
     kubectl auth can-i get nodes --as="$DEPLOYER"
+
     kubectl auth can-i create namespaces --as="$DEPLOYER"
+
     kubectl auth can-i create clusterroles --as="$DEPLOYER"
+
     kubectl auth can-i create clusterrolebindings --as="$DEPLOYER"
+
     kubectl auth can-i get persistentvolumes --as="$DEPLOYER"
 
 ### Cross-namespace denial
@@ -195,13 +216,17 @@ Commands:
 The following operations returned `no`:
 
     get pods in kube-system: no
+
     get secrets in kube-system: no
+
     get pods in default: no
 
 Commands:
 
     kubectl auth can-i get pods --as="$DEPLOYER" -n kube-system
+
     kubectl auth can-i get secrets --as="$DEPLOYER" -n kube-system
+
     kubectl auth can-i get pods --as="$DEPLOYER" -n default
 
 ### Application identity denial
@@ -213,7 +238,9 @@ The application ServiceAccount returned:
 Authorization checks returned:
 
     app SA get pods: no
+
     app SA get secrets: no
+
     app SA get nodes: no
 
 Full evidence:
@@ -252,7 +279,9 @@ was attempting to use a raw endpoint instead of a configured `mc` alias.
 The final sequence is:
 
     mc alias set capminio
+
     mc ready capminio
+
     mc mb capminio/cap --ignore-existing
 
 The corrected sequence was manually validated inside the failing hook pod.
@@ -310,11 +339,17 @@ External paths investigated so far include:
 ### AWS S3
 
     FQDN: s3.amazonaws.com
+
     Port: 443
+
     Component: Cap web / S3 storage path
+
     Requirement: Not required for this self-hosted deployment
+
     What breaks without access: Public S3-backed storage path would not work
+
     Final state: Blocked
+
     Classification: Not required / replaced by internal MinIO
 
 Evidence:
@@ -324,8 +359,11 @@ Evidence:
 ### Tinybird
 
     Component: Optional analytics path
+
     Runtime configuration: TINYBIRD_HOST not configured
+
     Final state: No baseline external access required
+
     Classification: Optional / disabled
 
 Evidence:
@@ -335,8 +373,11 @@ Evidence:
 ### cap.so / Vercel
 
     Components: Optional rate limiting / Vercel integration paths
+
     Runtime configuration: Vercel integration not configured
+
     Final state: No baseline external access required
+
     Classification: Optional / disabled
 
 Evidence:
@@ -346,8 +387,11 @@ Evidence:
 ### Sentry / OpenTelemetry
 
     Components: tracing / telemetry integration
+
     Runtime configuration: external exporter endpoints not configured
+
     Final state: No baseline external telemetry access
+
     Classification: Disabled
 
 Evidence:
@@ -413,8 +457,11 @@ The primary Cap application data paths are intended to remain internal to the
 Kubernetes environment:
 
     Cap web → MySQL
+
     Cap web → MinIO
+
     Cap web → media server
+
     media server → Cap web
 
 ### Object storage
@@ -436,7 +483,152 @@ external traffic.
 
 ---
 
-## 11. Customer Responsibility Boundary
+## 11. Admission Control
+
+### Control
+
+The deployment uses Kubernetes-native:
+
+    ValidatingAdmissionPolicy
+
+and:
+
+    ValidatingAdmissionPolicyBinding
+
+The policy and binding are both named:
+
+    cap-private-registry
+
+### Security requirement
+
+The policy enforces that every container image admitted into the `cap`
+namespace comes from the approved private registry:
+
+    host.docker.internal:5001/
+
+The validation covers:
+
+    spec.containers
+
+    spec.initContainers
+
+    spec.ephemeralContainers
+
+This prevents an unapproved image from being introduced through a normal
+container, init container, or ephemeral container.
+
+### Enforcement
+
+The policy uses:
+
+    failurePolicy: Fail
+
+The binding uses:
+
+    validationActions:
+      - Deny
+
+The policy is scoped to the `cap` namespace using the namespace selector:
+
+    kubernetes.io/metadata.name=cap
+
+### Implementation issue and remediation
+
+The first policy expression attempted to concatenate the container lists with
+CEL `+`.
+
+The Kubernetes API reported a type-checking warning because the required list
+addition overload was not valid for the typed Pod fields.
+
+The validation was rewritten to evaluate `containers`, `initContainers`, and
+`ephemeralContainers` independently.
+
+A subsequent server-side Helm dry run completed without expression warnings.
+
+The corrected policy was installed successfully as Helm revision 10.
+
+Live verification returned:
+
+    observedGeneration=2
+
+The binding returned:
+
+    validationActions=["Deny"]
+
+The expression warning check returned no warnings.
+
+### Negative test — public main image
+
+A test Pod using:
+
+    busybox:1.36
+
+was submitted to the `cap` namespace.
+
+The API server rejected it with:
+
+    Error from server (Forbidden)
+
+The rejection explicitly referenced the:
+
+    ValidatingAdmissionPolicy 'cap-private-registry'
+
+policy.
+
+A follow-up `kubectl get pod` returned `NotFound`, confirming that the Pod was
+not created.
+
+Result:
+
+    PASS
+
+### Positive test — private image
+
+A test Pod using the private digest-pinned image:
+
+    host.docker.internal:5001/cap/minio-mc@sha256:37d109dddbbb2c95873f5fc81ac93f37023264770fc580a7564148892087b1b7
+
+was accepted.
+
+Observed:
+
+    pod/admission-private-test created
+
+The container subsequently exited, but the admission result was successful
+because the Kubernetes API accepted and created the Pod.
+
+Result:
+
+    PASS
+
+### Negative test — public init-container bypass
+
+A test Pod used:
+
+- a compliant private image for the main container
+- `busybox:1.36` for the init container
+
+The API server rejected the request with the same private-registry policy
+message.
+
+A subsequent lookup confirmed that the Pod was not created.
+
+Result:
+
+    PASS
+
+This demonstrates that a public init-container image cannot bypass the
+private-registry admission control.
+
+### Evidence
+
+Full admission-control verification is archived in:
+
+    verification/logs/admission-control-verification.txt
+
+---
+
+## 12. Customer Responsibility Boundary
 
 The customer platform team owns cluster-wide controls.
 
@@ -457,7 +649,7 @@ permissions granted to the FDE deployment identity.
 
 ---
 
-## 12. Current Security Status
+## 13. Current Security Status
 
 ### Completed and verified
 
@@ -474,10 +666,14 @@ permissions granted to the FDE deployment identity.
 - Digest-pinned private image rendering.
 - External egress investigation.
 - MinIO setup hardening and remediation.
+- Kubernetes-native admission control.
+- Private-registry admission enforcement.
+- Public image rejection.
+- Private image acceptance.
+- Public init-container bypass rejection.
 
 ### Required before final submission
 
-- Enforced admission control.
 - Complete proxy implementation.
 - TLS interception validation.
 - Final explicit egress allowlist.
