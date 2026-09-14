@@ -21,22 +21,46 @@ spec:
     spec:
       serviceAccountName: {{ include "cap.serviceAccountName" . }}
       automountServiceAccountToken: false
+
       containers:
         - name: media-server
           image: "{{ include "cap.image" .Values.images.mediaServer }}"
           imagePullPolicy: {{ .Values.images.mediaServer.pullPolicy }}
+
           ports:
             - name: http
               containerPort: {{ .Values.mediaServer.service.port }}
               protocol: TCP
+
           env:
             - name: PORT
               value: {{ .Values.mediaServer.service.port | quote }}
+
             - name: MEDIA_SERVER_WEBHOOK_SECRET
               valueFrom:
                 secretKeyRef:
                   name: {{ include "cap.fullname" . }}-secrets
                   key: MEDIA_SERVER_WEBHOOK_SECRET
+
+            {{- if .Values.proxy.enabled }}
+            - name: HTTP_PROXY
+              value: {{ .Values.proxy.httpProxy | quote }}
+            - name: HTTPS_PROXY
+              value: {{ .Values.proxy.httpsProxy | quote }}
+            - name: http_proxy
+              value: {{ .Values.proxy.httpProxy | quote }}
+            - name: https_proxy
+              value: {{ .Values.proxy.httpsProxy | quote }}
+            - name: NO_PROXY
+              value: {{ .Values.proxy.noProxy | quote }}
+            - name: no_proxy
+              value: {{ .Values.proxy.noProxy | quote }}
+            {{- if .Values.proxy.ca.enabled }}
+            - name: NODE_EXTRA_CA_CERTS
+              value: {{ .Values.proxy.ca.mountPath | quote }}
+            {{- end }}
+            {{- end }}
+
           securityContext:
             runAsUser: 1001
             runAsGroup: 1001
@@ -45,6 +69,15 @@ spec:
             capabilities:
               drop:
                 - ALL
+
+          {{- if .Values.proxy.ca.enabled }}
+          volumeMounts:
+            - name: customer-egress-ca
+              mountPath: {{ .Values.proxy.ca.mountPath }}
+              subPath: ca.crt
+              readOnly: true
+          {{- end }}
+
           readinessProbe:
             httpGet:
               path: /health
@@ -53,6 +86,7 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 6
+
           livenessProbe:
             httpGet:
               path: /health
@@ -61,3 +95,13 @@ spec:
             periodSeconds: 20
             timeoutSeconds: 5
             failureThreshold: 3
+
+      {{- if .Values.proxy.ca.enabled }}
+      volumes:
+        - name: customer-egress-ca
+          secret:
+            secretName: {{ .Values.proxy.ca.secretName }}
+            items:
+              - key: {{ .Values.proxy.ca.key }}
+                path: ca.crt
+      {{- end }}

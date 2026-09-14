@@ -1,0 +1,19 @@
+# Customer egress allowlist.
+#
+# This file is the source of truth for external FQDN access.
+# An empty baseline is intentional: the current self-hosted Cap deployment
+# does not require external runtime egress.
+#
+# Every entry added later must be justified by observed application behavior
+# or an explicit customer requirement.
+
+apiVersion: zamp.io/v1
+kind: EgressAllowlist
+
+entries:
+  - fqdn: egress-test.customer-egress.svc.cluster.local
+    port: 8443
+    component: verification
+    reason: "Controlled HTTPS endpoint used to validate customer-proxy TLS interception independently of the host network."
+    breakage: "Positive TLS-interception verification cannot be performed."
+    phase: verification

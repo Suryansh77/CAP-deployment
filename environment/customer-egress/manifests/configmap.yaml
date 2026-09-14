@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: customer-egress-proxy-config
+  namespace: customer-egress
+data:
+  allowlist.txt: |
+    # Controlled verification-only destination.
+    egress-test.customer-egress.svc.cluster.local:8443
+
+  allowlist.py: |
+    from mitmproxy import ctx, http
+
+    ALLOWLIST_FILE = "/config/allowlist.txt"
+
+
+    def load_allowlist() -> set[tuple[str, int]]:
+        entries: set[tuple[str, int]] = set()
+
+        with open(ALLOWLIST_FILE, "r", encoding="utf-8") as policy:
+            for raw_line in policy:
+                line = raw_line.strip()
+
+                if not line or line.startswith("#"):
+                    continue
+
+                host, port = line.rsplit(":", 1)
+                entries.add((host.lower().rstrip("."), int(port)))
+
+        ctx.log.info(f"EGRESS POLICY LOADED entries={len(entries)}")
+        return entries
+
+
+    ALLOWLIST = load_allowlist()
+
+
+    def http_connect(flow: http.HTTPFlow) -> None:
+        host = flow.request.pretty_host.lower().rstrip(".")
+        port = flow.request.port
+
+        if (host, port) in ALLOWLIST:
+            ctx.log.info(
+                f"EGRESS ALLOW CONNECT host={host} port={port}"
+            )
+            return
+
+        ctx.log.warn(
+            f"EGRESS DENY CONNECT host={host} port={port}"
+        )
+
+        flow.response = http.Response.make(
+            403,
+            b"Blocked by customer egress policy\n",
+            {"Content-Type": "text/plain"},
+        )
+
+
+    def request(flow: http.HTTPFlow) -> None:
+        host = flow.request.pretty_host.lower().rstrip(".")
+        port = flow.request.port
+
+        if (host, port) in ALLOWLIST:
+            ctx.log.info(
+                f"EGRESS ALLOW host={host} port={port}"
+            )
+            return
+
+        ctx.log.warn(
+            f"EGRESS DENY host={host} port={port} "
+            f"method={flow.request.method} path={flow.request.path}"
+        )
+
+        flow.response = http.Response.make(
+            403,
+            b"Blocked by customer egress policy\n",
+            {"Content-Type": "text/plain"},
+        )

@@ -1,0 +1,16 @@
+[req]
+distinguished_name = req_distinguished_name
+prompt = no
+
+[req_distinguished_name]
+O = Zamp Test Environment
+OU = Egress Verification
+CN = egress-test.customer-egress.svc.cluster.local
+
+[server_cert]
+basicConstraints = critical, CA:false
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid,issuer
+subjectAltName = DNS:egress-test.customer-egress.svc.cluster.local,DNS:egress-test

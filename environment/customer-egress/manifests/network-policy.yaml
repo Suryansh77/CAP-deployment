@@ -1,0 +1,47 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: customer-egress-proxy-ingress
+  namespace: customer-egress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: customer-egress-proxy
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cap
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: cap
+      ports:
+        - protocol: TCP
+          port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: customer-egress-proxy-egress
+  namespace: customer-egress
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: customer-egress-proxy
+  policyTypes:
+    - Egress
+  egress:
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: customer-egress-upstream-test
+      ports:
+        - protocol: TCP
+          port: 8443

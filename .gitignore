@@ -8,3 +8,11 @@ environment/local-registry/certs/*.key
 environment/local-registry/certs/*.crt
 environment/local-registry/certs/*.csr
 environment/local-registry/certs/*.srl
+
+# Local customer egress CA material
+environment/customer-egress/certs/*.key
+environment/customer-egress/certs/*.pem
+environment/customer-egress/test-ca/*.key
+environment/customer-egress/test-ca/*.csr
+environment/customer-egress/test-ca/*.srl
+environment/customer-egress/test-ca/*.crt
