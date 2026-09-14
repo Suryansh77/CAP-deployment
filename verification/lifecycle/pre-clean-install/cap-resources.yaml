@@ -1,0 +1,2969 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/restartedAt: "2026-09-14T19:10:55+05:30"
+    creationTimestamp: "2026-09-14T14:20:04Z"
+    generateName: cap-media-server-7bd67f67d6-
+    generation: 1
+    labels:
+      app.kubernetes.io/component: media-server
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/name: cap
+      pod-template-hash: 7bd67f67d6
+    name: cap-media-server-7bd67f67d6-4h8wb
+    namespace: cap
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: cap-media-server-7bd67f67d6
+      uid: 4da624d1-f473-4c42-a63c-1ecc9d31b4f2
+    resourceVersion: "26811"
+    uid: bc9224cb-a45f-4dca-b17d-7b95dbd1053d
+  spec:
+    automountServiceAccountToken: false
+    containers:
+    - env:
+      - name: PORT
+        value: "3456"
+      - name: MEDIA_SERVER_WEBHOOK_SECRET
+        valueFrom:
+          secretKeyRef:
+            key: MEDIA_SERVER_WEBHOOK_SECRET
+            name: cap-secrets
+      - name: HTTP_PROXY
+        value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+      - name: HTTPS_PROXY
+        value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+      - name: http_proxy
+        value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+      - name: https_proxy
+        value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+      - name: NO_PROXY
+        value: localhost,127.0.0.1,cap-web,cap-media-server,cap-minio,cap-mysql,customer-egress-proxy,.svc,.svc.cluster.local,.cluster.local,10.43.0.10
+      - name: no_proxy
+        value: localhost,127.0.0.1,cap-web,cap-media-server,cap-minio,cap-mysql,customer-egress-proxy,.svc,.svc.cluster.local,.cluster.local,10.43.0.10
+      - name: NODE_EXTRA_CA_CERTS
+        value: /etc/customer-egress-ca/ca.crt
+      image: host.docker.internal:5001/cap/cap-media-server@sha256:98c0c73f5fa8939aba239f2c91d556f5f97177f3147c3f6aa548a0c3e848abca
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /health
+          port: http
+          scheme: HTTP
+        initialDelaySeconds: 30
+        periodSeconds: 20
+        successThreshold: 1
+        timeoutSeconds: 5
+      name: media-server
+      ports:
+      - containerPort: 3456
+        name: http
+        protocol: TCP
+      readinessProbe:
+        failureThreshold: 6
+        httpGet:
+          path: /health
+          port: http
+          scheme: HTTP
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 5
+      resources: {}
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+        runAsGroup: 1001
+        runAsNonRoot: true
+        runAsUser: 1001
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /etc/customer-egress-ca/ca.crt
+        name: customer-egress-ca
+        readOnly: true
+        subPath: ca.crt
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    nodeName: lima-rancher-desktop
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: cap
+    serviceAccountName: cap
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: customer-egress-ca
+      secret:
+        defaultMode: 420
+        items:
+        - key: mitmproxy-ca-cert.pem
+          path: ca.crt
+        secretName: customer-egress-ca
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2026-09-14T14:20:04Z"
+      observedGeneration: 1
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2026-09-14T14:20:04Z"
+      observedGeneration: 1
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2026-09-14T14:20:15Z"
+      observedGeneration: 1
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2026-09-14T14:20:15Z"
+      observedGeneration: 1
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2026-09-14T14:20:04Z"
+      observedGeneration: 1
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: docker://6ce62cf2e38f9041887fbc7d3ff1c7dda3d8abba8244f3ec7b4ab26cf7de6fe6
+      image: host.docker.internal:5001/cap/cap-media-server@sha256:98c0c73f5fa8939aba239f2c91d556f5f97177f3147c3f6aa548a0c3e848abca
+      imageID: docker-pullable://host.docker.internal:5001/cap/cap-media-server@sha256:98c0c73f5fa8939aba239f2c91d556f5f97177f3147c3f6aa548a0c3e848abca
+      lastState: {}
+      name: media-server
+      ready: true
+      resources: {}
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2026-09-14T14:20:04Z"
+      volumeMounts:
+      - mountPath: /etc/customer-egress-ca/ca.crt
+        name: customer-egress-ca
+        readOnly: true
+        recursiveReadOnly: Disabled
+    hostIP: 192.168.5.15
+    hostIPs:
+    - ip: 192.168.5.15
+    observedGeneration: 1
+    phase: Running
+    podIP: 10.42.0.90
+    podIPs:
+    - ip: 10.42.0.90
+    qosClass: BestEffort
+    resources: {}
+    startTime: "2026-09-14T14:20:04Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    creationTimestamp: "2026-09-13T22:07:36Z"
+    generateName: cap-minio-
+    generation: 1
+    labels:
+      app.kubernetes.io/component: minio
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/name: cap
+      apps.kubernetes.io/pod-index: "0"
+      controller-revision-hash: cap-minio-76fb7d94b4
+      statefulset.kubernetes.io/pod-name: cap-minio-0
+    name: cap-minio-0
+    namespace: cap
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: StatefulSet
+      name: cap-minio
+      uid: 82d9017d-b1b2-45e2-90e6-9031c18e317a
+    resourceVersion: "16226"
+    uid: 401c7b42-d6b9-4102-9a21-84833cec1cfc
+  spec:
+    automountServiceAccountToken: false
+    containers:
+    - args:
+      - server
+      - /data
+      - --console-address
+      - :9001
+      env:
+      - name: MINIO_ROOT_USER
+        valueFrom:
+          secretKeyRef:
+            key: MINIO_ROOT_USER
+            name: cap-secrets
+      - name: MINIO_ROOT_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            key: MINIO_ROOT_PASSWORD
+            name: cap-secrets
+      image: host.docker.internal:5001/cap/minio@sha256:9966a92a734f9411e32f4f41d7d9d826fcdc0f68c4e20b70295bd4e7c11f8a2f
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /minio/health/live
+          port: api
+          scheme: HTTP
+        initialDelaySeconds: 30
+        periodSeconds: 20
+        successThreshold: 1
+        timeoutSeconds: 5
+      name: minio
+      ports:
+      - containerPort: 9000
+        name: api
+        protocol: TCP
+      - containerPort: 9001
+        name: console
+        protocol: TCP
+      readinessProbe:
+        failureThreshold: 12
+        httpGet:
+          path: /minio/health/ready
+          port: api
+          scheme: HTTP
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 5
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /data
+        name: minio-data
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    hostname: cap-minio-0
+    nodeName: lima-rancher-desktop
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: cap
+    serviceAccountName: cap
+    subdomain: cap-minio
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: minio-data
+      persistentVolumeClaim:
+        claimName: minio-data-cap-minio-0
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2026-09-13T22:07:36Z"
+      observedGeneration: 1
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2026-09-13T22:07:36Z"
+      observedGeneration: 1
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2026-09-13T22:07:47Z"
+      observedGeneration: 1
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2026-09-13T22:07:47Z"
+      observedGeneration: 1
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2026-09-13T22:07:36Z"
+      observedGeneration: 1
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: docker://c8d77ad1f9f063f76ed020cb9f939bdd1d30eda748ede2ff1f59fdd517ef21a9
+      image: host.docker.internal:5001/cap/minio@sha256:9966a92a734f9411e32f4f41d7d9d826fcdc0f68c4e20b70295bd4e7c11f8a2f
+      imageID: docker-pullable://host.docker.internal:5001/cap/minio@sha256:9966a92a734f9411e32f4f41d7d9d826fcdc0f68c4e20b70295bd4e7c11f8a2f
+      lastState: {}
+      name: minio
+      ready: true
+      resources: {}
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2026-09-13T22:07:37Z"
+      volumeMounts:
+      - mountPath: /data
+        name: minio-data
+    hostIP: 192.168.5.15
+    hostIPs:
+    - ip: 192.168.5.15
+    observedGeneration: 1
+    phase: Running
+    podIP: 10.42.0.57
+    podIPs:
+    - ip: 10.42.0.57
+    qosClass: BestEffort
+    resources: {}
+    startTime: "2026-09-13T22:07:36Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    creationTimestamp: "2026-09-13T22:07:39Z"
+    generateName: cap-mysql-
+    generation: 1
+    labels:
+      app.kubernetes.io/component: mysql
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/name: cap
+      apps.kubernetes.io/pod-index: "0"
+      controller-revision-hash: cap-mysql-6fc58b5f7f
+      statefulset.kubernetes.io/pod-name: cap-mysql-0
+    name: cap-mysql-0
+    namespace: cap
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: StatefulSet
+      name: cap-mysql
+      uid: c656c1ce-6a41-4d35-86df-4e1ceec36fa0
+    resourceVersion: "16239"
+    uid: f24e7d7f-0f9d-46b2-9ba8-fbee0ef12a20
+  spec:
+    automountServiceAccountToken: false
+    containers:
+    - args:
+      - --max_connections=1000
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      env:
+      - name: MYSQL_DATABASE
+        value: cap
+      - name: MYSQL_USER
+        value: cap
+      - name: MYSQL_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            key: MYSQL_PASSWORD
+            name: cap-secrets
+      - name: MYSQL_ROOT_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            key: MYSQL_ROOT_PASSWORD
+            name: cap-secrets
+      image: host.docker.internal:5001/cap/mysql@sha256:213bbfaf699693a40a20a12bb4342d2589a15a3dc7153db698eaed252a92458e
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        exec:
+          command:
+          - sh
+          - -c
+          - mysqladmin ping -h 127.0.0.1 -u"$MYSQL_USER" -p"$MYSQL_PASSWORD"
+        failureThreshold: 3
+        initialDelaySeconds: 60
+        periodSeconds: 20
+        successThreshold: 1
+        timeoutSeconds: 5
+      name: mysql
+      ports:
+      - containerPort: 3306
+        name: mysql
+        protocol: TCP
+      readinessProbe:
+        exec:
+          command:
+          - sh
+          - -c
+          - mysqladmin ping -h 127.0.0.1 -u"$MYSQL_USER" -p"$MYSQL_PASSWORD"
+        failureThreshold: 12
+        initialDelaySeconds: 20
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 5
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /var/lib/mysql
+        name: mysql-data
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    hostname: cap-mysql-0
+    nodeName: lima-rancher-desktop
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: cap
+    serviceAccountName: cap
+    subdomain: cap-mysql
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: mysql-data
+      persistentVolumeClaim:
+        claimName: mysql-data-cap-mysql-0
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2026-09-13T22:07:39Z"
+      observedGeneration: 1
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2026-09-13T22:07:39Z"
+      observedGeneration: 1
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2026-09-13T22:08:00Z"
+      observedGeneration: 1
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2026-09-13T22:08:00Z"
+      observedGeneration: 1
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2026-09-13T22:07:39Z"
+      observedGeneration: 1
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: docker://ef7935656fa4fbd77d408ed3143242003676cedf57b46da7d84823b0b5842137
+      image: host.docker.internal:5001/cap/mysql:8.0
+      imageID: docker-pullable://host.docker.internal:5001/cap/mysql@sha256:213bbfaf699693a40a20a12bb4342d2589a15a3dc7153db698eaed252a92458e
+      lastState: {}
+      name: mysql
+      ready: true
+      resources: {}
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2026-09-13T22:07:40Z"
+      volumeMounts:
+      - mountPath: /var/lib/mysql
+        name: mysql-data
+    hostIP: 192.168.5.15
+    hostIPs:
+    - ip: 192.168.5.15
+    observedGeneration: 1
+    phase: Running
+    podIP: 10.42.0.58
+    podIPs:
+    - ip: 10.42.0.58
+    qosClass: BestEffort
+    resources: {}
+    startTime: "2026-09-13T22:07:39Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/restartedAt: "2026-09-14T19:10:55+05:30"
+    creationTimestamp: "2026-09-14T14:20:04Z"
+    generateName: cap-web-6bc694bfc9-
+    generation: 1
+    labels:
+      app.kubernetes.io/component: web
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/name: cap
+      pod-template-hash: 6bc694bfc9
+    name: cap-web-6bc694bfc9-sg9c2
+    namespace: cap
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: cap-web-6bc694bfc9
+      uid: b6960e97-f1c6-48ba-be78-407e45fd96f7
+    resourceVersion: "26841"
+    uid: fbb131d0-28cc-454f-9098-a33a06a97038
+  spec:
+    automountServiceAccountToken: false
+    containers:
+    - env:
+      - name: HTTP_PROXY
+        value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+      - name: HTTPS_PROXY
+        value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+      - name: http_proxy
+        value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+      - name: https_proxy
+        value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+      - name: NO_PROXY
+        value: localhost,127.0.0.1,cap-web,cap-media-server,cap-minio,cap-mysql,customer-egress-proxy,.svc,.svc.cluster.local,.cluster.local,10.43.0.10
+      - name: no_proxy
+        value: localhost,127.0.0.1,cap-web,cap-media-server,cap-minio,cap-mysql,customer-egress-proxy,.svc,.svc.cluster.local,.cluster.local,10.43.0.10
+      - name: NODE_EXTRA_CA_CERTS
+        value: /etc/customer-egress-ca/ca.crt
+      envFrom:
+      - configMapRef:
+          name: cap-config
+      - secretRef:
+          name: cap-secrets
+      image: host.docker.internal:5001/cap/cap-web@sha256:5b65d137f7f7ddd767e1acb37380a4609f43287458410515a013157b56cfa83d
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /
+          port: http
+          scheme: HTTP
+        initialDelaySeconds: 60
+        periodSeconds: 20
+        successThreshold: 1
+        timeoutSeconds: 5
+      name: cap-web
+      ports:
+      - containerPort: 3000
+        name: http
+        protocol: TCP
+      readinessProbe:
+        failureThreshold: 6
+        httpGet:
+          path: /
+          port: http
+          scheme: HTTP
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 5
+      resources: {}
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+          - ALL
+        runAsGroup: 1001
+        runAsNonRoot: true
+        runAsUser: 1001
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /etc/customer-egress-ca/ca.crt
+        name: customer-egress-ca
+        readOnly: true
+        subPath: ca.crt
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    nodeName: lima-rancher-desktop
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: cap
+    serviceAccountName: cap
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: customer-egress-ca
+      secret:
+        defaultMode: 420
+        items:
+        - key: mitmproxy-ca-cert.pem
+          path: ca.crt
+        secretName: customer-egress-ca
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2026-09-14T14:20:04Z"
+      observedGeneration: 1
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2026-09-14T14:20:04Z"
+      observedGeneration: 1
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2026-09-14T14:20:36Z"
+      observedGeneration: 1
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2026-09-14T14:20:36Z"
+      observedGeneration: 1
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2026-09-14T14:20:04Z"
+      observedGeneration: 1
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: docker://97c82eaac5a7b47af2d1841f7869a569f02c0c56ea733d694ce79ecb13c8789d
+      image: host.docker.internal:5001/cap/cap-web@sha256:5b65d137f7f7ddd767e1acb37380a4609f43287458410515a013157b56cfa83d
+      imageID: docker-pullable://host.docker.internal:5001/cap/cap-web@sha256:5b65d137f7f7ddd767e1acb37380a4609f43287458410515a013157b56cfa83d
+      lastState: {}
+      name: cap-web
+      ready: true
+      resources: {}
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2026-09-14T14:20:04Z"
+      volumeMounts:
+      - mountPath: /etc/customer-egress-ca/ca.crt
+        name: customer-egress-ca
+        readOnly: true
+        recursiveReadOnly: Disabled
+    hostIP: 192.168.5.15
+    hostIPs:
+    - ip: 192.168.5.15
+    observedGeneration: 1
+    phase: Running
+    podIP: 10.42.0.91
+    podIPs:
+    - ip: 10.42.0.91
+    qosClass: BestEffort
+    resources: {}
+    startTime: "2026-09-14T14:20:04Z"
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: cap
+      meta.helm.sh/release-namespace: cap
+    creationTimestamp: "2026-09-13T16:04:00Z"
+    labels:
+      app.kubernetes.io/component: media-server
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: cap
+      app.kubernetes.io/version: 0.6.0
+      helm.sh/chart: cap-0.1.0
+    name: cap-media-server
+    namespace: cap
+    resourceVersion: "6269"
+    uid: 04faba3c-f749-423a-9c01-0f0de2cd00a2
+  spec:
+    clusterIP: 10.43.205.189
+    clusterIPs:
+    - 10.43.205.189
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: http
+      port: 3456
+      protocol: TCP
+      targetPort: http
+    selector:
+      app.kubernetes.io/component: media-server
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/name: cap
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: cap
+      meta.helm.sh/release-namespace: cap
+    creationTimestamp: "2026-09-13T16:04:00Z"
+    labels:
+      app.kubernetes.io/component: minio
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: cap
+      app.kubernetes.io/version: 0.6.0
+      helm.sh/chart: cap-0.1.0
+    name: cap-minio
+    namespace: cap
+    resourceVersion: "6271"
+    uid: e8a3e037-29e5-43b5-825a-ed1031ee7698
+  spec:
+    clusterIP: 10.43.84.250
+    clusterIPs:
+    - 10.43.84.250
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: api
+      port: 9000
+      protocol: TCP
+      targetPort: api
+    selector:
+      app.kubernetes.io/component: minio
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/name: cap
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: cap
+      meta.helm.sh/release-namespace: cap
+    creationTimestamp: "2026-09-13T16:04:00Z"
+    labels:
+      app.kubernetes.io/component: mysql
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: cap
+      app.kubernetes.io/version: 0.6.0
+      helm.sh/chart: cap-0.1.0
+    name: cap-mysql
+    namespace: cap
+    resourceVersion: "6267"
+    uid: 9219888e-7fac-4dbf-9cca-077f4a97e375
+  spec:
+    clusterIP: None
+    clusterIPs:
+    - None
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: mysql
+      port: 3306
+      protocol: TCP
+      targetPort: mysql
+    selector:
+      app.kubernetes.io/component: mysql
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/name: cap
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: cap
+      meta.helm.sh/release-namespace: cap
+    creationTimestamp: "2026-09-13T16:04:00Z"
+    labels:
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: cap
+      app.kubernetes.io/version: 0.6.0
+      helm.sh/chart: cap-0.1.0
+    name: cap-web
+    namespace: cap
+    resourceVersion: "6273"
+    uid: 3d7e806d-8482-455b-8d2e-65420395379e
+  spec:
+    clusterIP: 10.43.45.229
+    clusterIPs:
+    - 10.43.45.229
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: http
+      port: 3000
+      protocol: TCP
+      targetPort: http
+    selector:
+      app.kubernetes.io/component: web
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/name: cap
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "10"
+      meta.helm.sh/release-name: cap
+      meta.helm.sh/release-namespace: cap
+    creationTimestamp: "2026-09-13T16:04:00Z"
+    generation: 10
+    labels:
+      app.kubernetes.io/component: media-server
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: cap
+      app.kubernetes.io/version: 0.6.0
+      helm.sh/chart: cap-0.1.0
+    name: cap-media-server
+    namespace: cap
+    resourceVersion: "26830"
+    uid: 487e2ca6-dd74-469a-9045-9fdac7a56f8c
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: media-server
+        app.kubernetes.io/instance: cap
+        app.kubernetes.io/name: cap
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          kubectl.kubernetes.io/restartedAt: "2026-09-14T19:10:55+05:30"
+        labels:
+          app.kubernetes.io/component: media-server
+          app.kubernetes.io/instance: cap
+          app.kubernetes.io/name: cap
+      spec:
+        automountServiceAccountToken: false
+        containers:
+        - env:
+          - name: PORT
+            value: "3456"
+          - name: MEDIA_SERVER_WEBHOOK_SECRET
+            valueFrom:
+              secretKeyRef:
+                key: MEDIA_SERVER_WEBHOOK_SECRET
+                name: cap-secrets
+          - name: HTTP_PROXY
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: HTTPS_PROXY
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: http_proxy
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: https_proxy
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: NO_PROXY
+            value: localhost,127.0.0.1,cap-web,cap-media-server,cap-minio,cap-mysql,customer-egress-proxy,.svc,.svc.cluster.local,.cluster.local,10.43.0.10
+          - name: no_proxy
+            value: localhost,127.0.0.1,cap-web,cap-media-server,cap-minio,cap-mysql,customer-egress-proxy,.svc,.svc.cluster.local,.cluster.local,10.43.0.10
+          - name: NODE_EXTRA_CA_CERTS
+            value: /etc/customer-egress-ca/ca.crt
+          image: host.docker.internal:5001/cap/cap-media-server@sha256:98c0c73f5fa8939aba239f2c91d556f5f97177f3147c3f6aa548a0c3e848abca
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: media-server
+          ports:
+          - containerPort: 3456
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /etc/customer-egress-ca/ca.crt
+            name: customer-egress-ca
+            readOnly: true
+            subPath: ca.crt
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: cap
+        serviceAccountName: cap
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: customer-egress-ca
+          secret:
+            defaultMode: 420
+            items:
+            - key: mitmproxy-ca-cert.pem
+              path: ca.crt
+            secretName: customer-egress-ca
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2026-09-13T20:47:02Z"
+      lastUpdateTime: "2026-09-13T20:47:02Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2026-09-14T11:32:22Z"
+      lastUpdateTime: "2026-09-14T14:20:15Z"
+      message: ReplicaSet "cap-media-server-7bd67f67d6" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 10
+    readyReplicas: 1
+    replicas: 1
+    terminatingReplicas: 0
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "10"
+      meta.helm.sh/release-name: cap
+      meta.helm.sh/release-namespace: cap
+    creationTimestamp: "2026-09-13T16:04:00Z"
+    generation: 10
+    labels:
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: cap
+      app.kubernetes.io/version: 0.6.0
+      helm.sh/chart: cap-0.1.0
+    name: cap-web
+    namespace: cap
+    resourceVersion: "26860"
+    uid: 29e7414b-6e28-492c-9b83-4b6a8aa3bbf0
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: web
+        app.kubernetes.io/instance: cap
+        app.kubernetes.io/name: cap
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          kubectl.kubernetes.io/restartedAt: "2026-09-14T19:10:55+05:30"
+        labels:
+          app.kubernetes.io/component: web
+          app.kubernetes.io/instance: cap
+          app.kubernetes.io/name: cap
+      spec:
+        automountServiceAccountToken: false
+        containers:
+        - env:
+          - name: HTTP_PROXY
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: HTTPS_PROXY
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: http_proxy
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: https_proxy
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: NO_PROXY
+            value: localhost,127.0.0.1,cap-web,cap-media-server,cap-minio,cap-mysql,customer-egress-proxy,.svc,.svc.cluster.local,.cluster.local,10.43.0.10
+          - name: no_proxy
+            value: localhost,127.0.0.1,cap-web,cap-media-server,cap-minio,cap-mysql,customer-egress-proxy,.svc,.svc.cluster.local,.cluster.local,10.43.0.10
+          - name: NODE_EXTRA_CA_CERTS
+            value: /etc/customer-egress-ca/ca.crt
+          envFrom:
+          - configMapRef:
+              name: cap-config
+          - secretRef:
+              name: cap-secrets
+          image: host.docker.internal:5001/cap/cap-web@sha256:5b65d137f7f7ddd767e1acb37380a4609f43287458410515a013157b56cfa83d
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: cap-web
+          ports:
+          - containerPort: 3000
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /etc/customer-egress-ca/ca.crt
+            name: customer-egress-ca
+            readOnly: true
+            subPath: ca.crt
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: cap
+        serviceAccountName: cap
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: customer-egress-ca
+          secret:
+            defaultMode: 420
+            items:
+            - key: mitmproxy-ca-cert.pem
+              path: ca.crt
+            secretName: customer-egress-ca
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2026-09-13T20:47:49Z"
+      lastUpdateTime: "2026-09-13T20:47:49Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2026-09-14T11:32:22Z"
+      lastUpdateTime: "2026-09-14T14:20:36Z"
+      message: ReplicaSet "cap-web-6bc694bfc9" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 10
+    readyReplicas: 1
+    replicas: 1
+    terminatingReplicas: 0
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "1"
+      deployment.kubernetes.io/max-replicas: "2"
+      deployment.kubernetes.io/revision: "7"
+      meta.helm.sh/release-name: cap
+      meta.helm.sh/release-namespace: cap
+    creationTimestamp: "2026-09-14T11:41:00Z"
+    generation: 2
+    labels:
+      app.kubernetes.io/component: media-server
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/name: cap
+      pod-template-hash: 5995468d89
+    name: cap-media-server-5995468d89
+    namespace: cap
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: cap-media-server
+      uid: 487e2ca6-dd74-469a-9045-9fdac7a56f8c
+    resourceVersion: "25562"
+    uid: a587971b-1b33-40ab-ba07-f32c8954394d
+  spec:
+    replicas: 0
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: media-server
+        app.kubernetes.io/instance: cap
+        app.kubernetes.io/name: cap
+        pod-template-hash: 5995468d89
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/component: media-server
+          app.kubernetes.io/instance: cap
+          app.kubernetes.io/name: cap
+          pod-template-hash: 5995468d89
+      spec:
+        automountServiceAccountToken: false
+        containers:
+        - env:
+          - name: PORT
+            value: "3456"
+          - name: MEDIA_SERVER_WEBHOOK_SECRET
+            valueFrom:
+              secretKeyRef:
+                key: MEDIA_SERVER_WEBHOOK_SECRET
+                name: cap-secrets
+          - name: HTTP_PROXY
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: HTTPS_PROXY
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: http_proxy
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: https_proxy
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: NO_PROXY
+            value: localhost,127.0.0.1,cap-web,cap-media-server,cap-minio,cap-mysql,customer-egress-proxy,.svc,.svc.cluster.local,.cluster.local,10.43.0.10
+          - name: no_proxy
+            value: localhost,127.0.0.1,cap-web,cap-media-server,cap-minio,cap-mysql,customer-egress-proxy,.svc,.svc.cluster.local,.cluster.local,10.43.0.10
+          - name: NODE_EXTRA_CA_CERTS
+            value: /etc/customer-egress-ca/ca.crt
+          image: host.docker.internal:5001/cap/cap-media-server@sha256:98c0c73f5fa8939aba239f2c91d556f5f97177f3147c3f6aa548a0c3e848abca
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: media-server
+          ports:
+          - containerPort: 3456
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /etc/customer-egress-ca/ca.crt
+            name: customer-egress-ca
+            readOnly: true
+            subPath: ca.crt
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: cap
+        serviceAccountName: cap
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: customer-egress-ca
+          secret:
+            defaultMode: 420
+            items:
+            - key: mitmproxy-ca-cert.pem
+              path: ca.crt
+            secretName: customer-egress-ca
+  status:
+    observedGeneration: 2
+    replicas: 0
+    terminatingReplicas: 0
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "1"
+      deployment.kubernetes.io/max-replicas: "2"
+      deployment.kubernetes.io/revision: "2"
+      meta.helm.sh/release-name: cap
+      meta.helm.sh/release-namespace: cap
+    creationTimestamp: "2026-09-13T16:59:34Z"
+    generation: 2
+    labels:
+      app.kubernetes.io/component: media-server
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/name: cap
+      pod-template-hash: 5c86bd977c
+    name: cap-media-server-5c86bd977c
+    namespace: cap
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: cap-media-server
+      uid: 487e2ca6-dd74-469a-9045-9fdac7a56f8c
+    resourceVersion: "16222"
+    uid: 378b2ad5-483f-4a3d-9e0d-cce80a4d3895
+  spec:
+    replicas: 0
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: media-server
+        app.kubernetes.io/instance: cap
+        app.kubernetes.io/name: cap
+        pod-template-hash: 5c86bd977c
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/component: media-server
+          app.kubernetes.io/instance: cap
+          app.kubernetes.io/name: cap
+          pod-template-hash: 5c86bd977c
+      spec:
+        automountServiceAccountToken: false
+        containers:
+        - env:
+          - name: PORT
+            value: "3456"
+          - name: MEDIA_SERVER_WEBHOOK_SECRET
+            valueFrom:
+              secretKeyRef:
+                key: MEDIA_SERVER_WEBHOOK_SECRET
+                name: cap-secrets
+          image: ghcr.io/capsoftware/cap-media-server:latest
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: media-server
+          ports:
+          - containerPort: 3456
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: cap
+        serviceAccountName: cap
+        terminationGracePeriodSeconds: 30
+  status:
+    observedGeneration: 2
+    replicas: 0
+    terminatingReplicas: 0
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "1"
+      deployment.kubernetes.io/max-replicas: "2"
+      deployment.kubernetes.io/revision: "6"
+      deployment.kubernetes.io/revision-history: "4"
+      meta.helm.sh/release-name: cap
+      meta.helm.sh/release-namespace: cap
+    creationTimestamp: "2026-09-14T11:22:22Z"
+    generation: 4
+    labels:
+      app.kubernetes.io/component: media-server
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/name: cap
+      pod-template-hash: 5fb9f7d78c
+    name: cap-media-server-5fb9f7d78c
+    namespace: cap
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: cap-media-server
+      uid: 487e2ca6-dd74-469a-9045-9fdac7a56f8c
+    resourceVersion: "22133"
+    uid: 5e6246d0-08b3-4195-82e7-55f5eb1288ca
+  spec:
+    replicas: 0
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: media-server
+        app.kubernetes.io/instance: cap
+        app.kubernetes.io/name: cap
+        pod-template-hash: 5fb9f7d78c
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/component: media-server
+          app.kubernetes.io/instance: cap
+          app.kubernetes.io/name: cap
+          pod-template-hash: 5fb9f7d78c
+      spec:
+        automountServiceAccountToken: false
+        containers:
+        - env:
+          - name: PORT
+            value: "3456"
+          - name: MEDIA_SERVER_WEBHOOK_SECRET
+            valueFrom:
+              secretKeyRef:
+                key: MEDIA_SERVER_WEBHOOK_SECRET
+                name: cap-secrets
+          - name: HTTP_PROXY
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: HTTPS_PROXY
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: http_proxy
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: https_proxy
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: NO_PROXY
+            value: localhost,127.0.0.1, cap-web, cap-media-server, cap-minio, cap-mysql,
+              customer-egress-proxy, .svc, .svc.cluster.local, .cluster.local, 10.43.0.10
+          - name: no_proxy
+            value: localhost,127.0.0.1, cap-web, cap-media-server, cap-minio, cap-mysql,
+              customer-egress-proxy, .svc, .svc.cluster.local, .cluster.local, 10.43.0.10
+          - name: NODE_EXTRA_CA_CERTS
+            value: /etc/customer-egress-ca/ca.crt
+          image: host.docker.internal:5001/cap/cap-media-server@sha256:98c0c73f5fa8939aba239f2c91d556f5f97177f3147c3f6aa548a0c3e848abca
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: media-server
+          ports:
+          - containerPort: 3456
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /etc/customer-egress-ca/ca.crt
+            name: customer-egress-ca
+            readOnly: true
+            subPath: ca.crt
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: cap
+        serviceAccountName: cap
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: customer-egress-ca
+          secret:
+            defaultMode: 420
+            items:
+            - key: mitmproxy-ca-cert.pem
+              path: ca.crt
+            secretName: customer-egress-ca
+  status:
+    observedGeneration: 4
+    replicas: 0
+    terminatingReplicas: 0
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "1"
+      deployment.kubernetes.io/max-replicas: "2"
+      deployment.kubernetes.io/revision: "1"
+      meta.helm.sh/release-name: cap
+      meta.helm.sh/release-namespace: cap
+    creationTimestamp: "2026-09-13T16:04:00Z"
+    generation: 2
+    labels:
+      app.kubernetes.io/component: media-server
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/name: cap
+      pod-template-hash: 66bfcfcf4c
+    name: cap-media-server-66bfcfcf4c
+    namespace: cap
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: cap-media-server
+      uid: 487e2ca6-dd74-469a-9045-9fdac7a56f8c
+    resourceVersion: "7291"
+    uid: f465b618-dc6c-40ec-b243-6569f0798223
+  spec:
+    replicas: 0
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: media-server
+        app.kubernetes.io/instance: cap
+        app.kubernetes.io/name: cap
+        pod-template-hash: 66bfcfcf4c
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/component: media-server
+          app.kubernetes.io/instance: cap
+          app.kubernetes.io/name: cap
+          pod-template-hash: 66bfcfcf4c
+      spec:
+        automountServiceAccountToken: false
+        containers:
+        - env:
+          - name: PORT
+            value: "3456"
+          - name: MEDIA_SERVER_WEBHOOK_SECRET
+            valueFrom:
+              secretKeyRef:
+                key: MEDIA_SERVER_WEBHOOK_SECRET
+                name: cap-secrets
+          image: ghcr.io/capsoftware/cap-media-server:latest
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: media-server
+          ports:
+          - containerPort: 3456
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsNonRoot: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: cap
+        serviceAccountName: cap
+        terminationGracePeriodSeconds: 30
+  status:
+    observedGeneration: 2
+    replicas: 0
+    terminatingReplicas: 0
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "1"
+      deployment.kubernetes.io/max-replicas: "2"
+      deployment.kubernetes.io/revision: "10"
+      deployment.kubernetes.io/revision-history: "8"
+      meta.helm.sh/release-name: cap
+      meta.helm.sh/release-namespace: cap
+    creationTimestamp: "2026-09-14T13:40:55Z"
+    generation: 3
+    labels:
+      app.kubernetes.io/component: media-server
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/name: cap
+      pod-template-hash: 7bd67f67d6
+    name: cap-media-server-7bd67f67d6
+    namespace: cap
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: cap-media-server
+      uid: 487e2ca6-dd74-469a-9045-9fdac7a56f8c
+    resourceVersion: "26813"
+    uid: 4da624d1-f473-4c42-a63c-1ecc9d31b4f2
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: media-server
+        app.kubernetes.io/instance: cap
+        app.kubernetes.io/name: cap
+        pod-template-hash: 7bd67f67d6
+    template:
+      metadata:
+        annotations:
+          kubectl.kubernetes.io/restartedAt: "2026-09-14T19:10:55+05:30"
+        labels:
+          app.kubernetes.io/component: media-server
+          app.kubernetes.io/instance: cap
+          app.kubernetes.io/name: cap
+          pod-template-hash: 7bd67f67d6
+      spec:
+        automountServiceAccountToken: false
+        containers:
+        - env:
+          - name: PORT
+            value: "3456"
+          - name: MEDIA_SERVER_WEBHOOK_SECRET
+            valueFrom:
+              secretKeyRef:
+                key: MEDIA_SERVER_WEBHOOK_SECRET
+                name: cap-secrets
+          - name: HTTP_PROXY
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: HTTPS_PROXY
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: http_proxy
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: https_proxy
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: NO_PROXY
+            value: localhost,127.0.0.1,cap-web,cap-media-server,cap-minio,cap-mysql,customer-egress-proxy,.svc,.svc.cluster.local,.cluster.local,10.43.0.10
+          - name: no_proxy
+            value: localhost,127.0.0.1,cap-web,cap-media-server,cap-minio,cap-mysql,customer-egress-proxy,.svc,.svc.cluster.local,.cluster.local,10.43.0.10
+          - name: NODE_EXTRA_CA_CERTS
+            value: /etc/customer-egress-ca/ca.crt
+          image: host.docker.internal:5001/cap/cap-media-server@sha256:98c0c73f5fa8939aba239f2c91d556f5f97177f3147c3f6aa548a0c3e848abca
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: media-server
+          ports:
+          - containerPort: 3456
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /etc/customer-egress-ca/ca.crt
+            name: customer-egress-ca
+            readOnly: true
+            subPath: ca.crt
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: cap
+        serviceAccountName: cap
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: customer-egress-ca
+          secret:
+            defaultMode: 420
+            items:
+            - key: mitmproxy-ca-cert.pem
+              path: ca.crt
+            secretName: customer-egress-ca
+  status:
+    availableReplicas: 1
+    fullyLabeledReplicas: 1
+    observedGeneration: 3
+    readyReplicas: 1
+    replicas: 1
+    terminatingReplicas: 0
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "1"
+      deployment.kubernetes.io/max-replicas: "2"
+      deployment.kubernetes.io/revision: "5"
+      deployment.kubernetes.io/revision-history: "3"
+      meta.helm.sh/release-name: cap
+      meta.helm.sh/release-namespace: cap
+    creationTimestamp: "2026-09-13T22:07:35Z"
+    generation: 2
+    labels:
+      app.kubernetes.io/component: media-server
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/name: cap
+      pod-template-hash: 9f8996799
+    name: cap-media-server-9f8996799
+    namespace: cap
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: cap-media-server
+      uid: 487e2ca6-dd74-469a-9045-9fdac7a56f8c
+    resourceVersion: "21900"
+    uid: a11f01a1-689e-41a7-a356-fc1febdf3a9f
+  spec:
+    replicas: 0
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: media-server
+        app.kubernetes.io/instance: cap
+        app.kubernetes.io/name: cap
+        pod-template-hash: 9f8996799
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/component: media-server
+          app.kubernetes.io/instance: cap
+          app.kubernetes.io/name: cap
+          pod-template-hash: 9f8996799
+      spec:
+        automountServiceAccountToken: false
+        containers:
+        - env:
+          - name: PORT
+            value: "3456"
+          - name: MEDIA_SERVER_WEBHOOK_SECRET
+            valueFrom:
+              secretKeyRef:
+                key: MEDIA_SERVER_WEBHOOK_SECRET
+                name: cap-secrets
+          image: host.docker.internal:5001/cap/cap-media-server@sha256:98c0c73f5fa8939aba239f2c91d556f5f97177f3147c3f6aa548a0c3e848abca
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: media-server
+          ports:
+          - containerPort: 3456
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: cap
+        serviceAccountName: cap
+        terminationGracePeriodSeconds: 30
+  status:
+    observedGeneration: 2
+    replicas: 0
+    terminatingReplicas: 0
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "1"
+      deployment.kubernetes.io/max-replicas: "2"
+      deployment.kubernetes.io/revision: "9"
+      meta.helm.sh/release-name: cap
+      meta.helm.sh/release-namespace: cap
+    creationTimestamp: "2026-09-14T13:55:07Z"
+    generation: 2
+    labels:
+      app.kubernetes.io/component: media-server
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/name: cap
+      pod-template-hash: cc99dfccd
+    name: cap-media-server-cc99dfccd
+    namespace: cap
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: cap-media-server
+      uid: 487e2ca6-dd74-469a-9045-9fdac7a56f8c
+    resourceVersion: "26828"
+    uid: 4163ca3f-6acd-4448-a593-d947f7f349f5
+  spec:
+    replicas: 0
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: media-server
+        app.kubernetes.io/instance: cap
+        app.kubernetes.io/name: cap
+        pod-template-hash: cc99dfccd
+    template:
+      metadata:
+        annotations:
+          kubectl.kubernetes.io/restartedAt: "2026-09-14T19:10:55+05:30"
+        labels:
+          app.kubernetes.io/component: media-server
+          app.kubernetes.io/instance: cap
+          app.kubernetes.io/name: cap
+          pod-template-hash: cc99dfccd
+      spec:
+        automountServiceAccountToken: false
+        containers:
+        - env:
+          - name: PORT
+            value: "3456"
+          - name: MEDIA_SERVER_WEBHOOK_SECRET
+            valueFrom:
+              secretKeyRef:
+                key: MEDIA_SERVER_WEBHOOK_SECRET
+                name: cap-secrets
+          image: host.docker.internal:5001/cap/cap-media-server@sha256:98c0c73f5fa8939aba239f2c91d556f5f97177f3147c3f6aa548a0c3e848abca
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: media-server
+          ports:
+          - containerPort: 3456
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /health
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: cap
+        serviceAccountName: cap
+        terminationGracePeriodSeconds: 30
+  status:
+    observedGeneration: 2
+    replicas: 0
+    terminatingReplicas: 0
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "1"
+      deployment.kubernetes.io/max-replicas: "2"
+      deployment.kubernetes.io/revision: "1"
+      meta.helm.sh/release-name: cap
+      meta.helm.sh/release-namespace: cap
+    creationTimestamp: "2026-09-13T16:04:00Z"
+    generation: 2
+    labels:
+      app.kubernetes.io/component: web
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/name: cap
+      pod-template-hash: 57d696576
+    name: cap-web-57d696576
+    namespace: cap
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: cap-web
+      uid: 29e7414b-6e28-492c-9b83-4b6a8aa3bbf0
+    resourceVersion: "7166"
+    uid: 21465a51-a689-49f1-93fa-23ab07ddf535
+  spec:
+    replicas: 0
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: web
+        app.kubernetes.io/instance: cap
+        app.kubernetes.io/name: cap
+        pod-template-hash: 57d696576
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/component: web
+          app.kubernetes.io/instance: cap
+          app.kubernetes.io/name: cap
+          pod-template-hash: 57d696576
+      spec:
+        automountServiceAccountToken: false
+        containers:
+        - envFrom:
+          - configMapRef:
+              name: cap-config
+          - secretRef:
+              name: cap-secrets
+          image: ghcr.io/capsoftware/cap-web:latest
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: cap-web
+          ports:
+          - containerPort: 3000
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsNonRoot: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: cap
+        serviceAccountName: cap
+        terminationGracePeriodSeconds: 30
+  status:
+    observedGeneration: 2
+    replicas: 0
+    terminatingReplicas: 0
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "1"
+      deployment.kubernetes.io/max-replicas: "2"
+      deployment.kubernetes.io/revision: "10"
+      deployment.kubernetes.io/revision-history: "8"
+      meta.helm.sh/release-name: cap
+      meta.helm.sh/release-namespace: cap
+    creationTimestamp: "2026-09-14T13:40:55Z"
+    generation: 3
+    labels:
+      app.kubernetes.io/component: web
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/name: cap
+      pod-template-hash: 6bc694bfc9
+    name: cap-web-6bc694bfc9
+    namespace: cap
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: cap-web
+      uid: 29e7414b-6e28-492c-9b83-4b6a8aa3bbf0
+    resourceVersion: "26843"
+    uid: b6960e97-f1c6-48ba-be78-407e45fd96f7
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: web
+        app.kubernetes.io/instance: cap
+        app.kubernetes.io/name: cap
+        pod-template-hash: 6bc694bfc9
+    template:
+      metadata:
+        annotations:
+          kubectl.kubernetes.io/restartedAt: "2026-09-14T19:10:55+05:30"
+        labels:
+          app.kubernetes.io/component: web
+          app.kubernetes.io/instance: cap
+          app.kubernetes.io/name: cap
+          pod-template-hash: 6bc694bfc9
+      spec:
+        automountServiceAccountToken: false
+        containers:
+        - env:
+          - name: HTTP_PROXY
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: HTTPS_PROXY
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: http_proxy
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: https_proxy
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: NO_PROXY
+            value: localhost,127.0.0.1,cap-web,cap-media-server,cap-minio,cap-mysql,customer-egress-proxy,.svc,.svc.cluster.local,.cluster.local,10.43.0.10
+          - name: no_proxy
+            value: localhost,127.0.0.1,cap-web,cap-media-server,cap-minio,cap-mysql,customer-egress-proxy,.svc,.svc.cluster.local,.cluster.local,10.43.0.10
+          - name: NODE_EXTRA_CA_CERTS
+            value: /etc/customer-egress-ca/ca.crt
+          envFrom:
+          - configMapRef:
+              name: cap-config
+          - secretRef:
+              name: cap-secrets
+          image: host.docker.internal:5001/cap/cap-web@sha256:5b65d137f7f7ddd767e1acb37380a4609f43287458410515a013157b56cfa83d
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: cap-web
+          ports:
+          - containerPort: 3000
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /etc/customer-egress-ca/ca.crt
+            name: customer-egress-ca
+            readOnly: true
+            subPath: ca.crt
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: cap
+        serviceAccountName: cap
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: customer-egress-ca
+          secret:
+            defaultMode: 420
+            items:
+            - key: mitmproxy-ca-cert.pem
+              path: ca.crt
+            secretName: customer-egress-ca
+  status:
+    availableReplicas: 1
+    fullyLabeledReplicas: 1
+    observedGeneration: 3
+    readyReplicas: 1
+    replicas: 1
+    terminatingReplicas: 0
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "1"
+      deployment.kubernetes.io/max-replicas: "2"
+      deployment.kubernetes.io/revision: "6"
+      deployment.kubernetes.io/revision-history: "4"
+      meta.helm.sh/release-name: cap
+      meta.helm.sh/release-namespace: cap
+    creationTimestamp: "2026-09-14T11:22:22Z"
+    generation: 4
+    labels:
+      app.kubernetes.io/component: web
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/name: cap
+      pod-template-hash: 7644d87cd4
+    name: cap-web-7644d87cd4
+    namespace: cap
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: cap-web
+      uid: 29e7414b-6e28-492c-9b83-4b6a8aa3bbf0
+    resourceVersion: "22162"
+    uid: e2ff314c-8dc8-4105-a2a4-2efaf2150b7b
+  spec:
+    replicas: 0
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: web
+        app.kubernetes.io/instance: cap
+        app.kubernetes.io/name: cap
+        pod-template-hash: 7644d87cd4
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/component: web
+          app.kubernetes.io/instance: cap
+          app.kubernetes.io/name: cap
+          pod-template-hash: 7644d87cd4
+      spec:
+        automountServiceAccountToken: false
+        containers:
+        - env:
+          - name: HTTP_PROXY
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: HTTPS_PROXY
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: http_proxy
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: https_proxy
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: NO_PROXY
+            value: localhost,127.0.0.1, cap-web, cap-media-server, cap-minio, cap-mysql,
+              customer-egress-proxy, .svc, .svc.cluster.local, .cluster.local, 10.43.0.10
+          - name: no_proxy
+            value: localhost,127.0.0.1, cap-web, cap-media-server, cap-minio, cap-mysql,
+              customer-egress-proxy, .svc, .svc.cluster.local, .cluster.local, 10.43.0.10
+          - name: NODE_EXTRA_CA_CERTS
+            value: /etc/customer-egress-ca/ca.crt
+          envFrom:
+          - configMapRef:
+              name: cap-config
+          - secretRef:
+              name: cap-secrets
+          image: host.docker.internal:5001/cap/cap-web@sha256:5b65d137f7f7ddd767e1acb37380a4609f43287458410515a013157b56cfa83d
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: cap-web
+          ports:
+          - containerPort: 3000
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /etc/customer-egress-ca/ca.crt
+            name: customer-egress-ca
+            readOnly: true
+            subPath: ca.crt
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: cap
+        serviceAccountName: cap
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: customer-egress-ca
+          secret:
+            defaultMode: 420
+            items:
+            - key: mitmproxy-ca-cert.pem
+              path: ca.crt
+            secretName: customer-egress-ca
+  status:
+    observedGeneration: 4
+    replicas: 0
+    terminatingReplicas: 0
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "1"
+      deployment.kubernetes.io/max-replicas: "2"
+      deployment.kubernetes.io/revision: "9"
+      meta.helm.sh/release-name: cap
+      meta.helm.sh/release-namespace: cap
+    creationTimestamp: "2026-09-14T13:55:07Z"
+    generation: 2
+    labels:
+      app.kubernetes.io/component: web
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/name: cap
+      pod-template-hash: 86667c645d
+    name: cap-web-86667c645d
+    namespace: cap
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: cap-web
+      uid: 29e7414b-6e28-492c-9b83-4b6a8aa3bbf0
+    resourceVersion: "26859"
+    uid: da9746d8-1510-4855-9d0a-10cfd954fd00
+  spec:
+    replicas: 0
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: web
+        app.kubernetes.io/instance: cap
+        app.kubernetes.io/name: cap
+        pod-template-hash: 86667c645d
+    template:
+      metadata:
+        annotations:
+          kubectl.kubernetes.io/restartedAt: "2026-09-14T19:10:55+05:30"
+        labels:
+          app.kubernetes.io/component: web
+          app.kubernetes.io/instance: cap
+          app.kubernetes.io/name: cap
+          pod-template-hash: 86667c645d
+      spec:
+        automountServiceAccountToken: false
+        containers:
+        - envFrom:
+          - configMapRef:
+              name: cap-config
+          - secretRef:
+              name: cap-secrets
+          image: host.docker.internal:5001/cap/cap-web@sha256:5b65d137f7f7ddd767e1acb37380a4609f43287458410515a013157b56cfa83d
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: cap-web
+          ports:
+          - containerPort: 3000
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: cap
+        serviceAccountName: cap
+        terminationGracePeriodSeconds: 30
+  status:
+    observedGeneration: 2
+    replicas: 0
+    terminatingReplicas: 0
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "1"
+      deployment.kubernetes.io/max-replicas: "2"
+      deployment.kubernetes.io/revision: "5"
+      deployment.kubernetes.io/revision-history: "3"
+      meta.helm.sh/release-name: cap
+      meta.helm.sh/release-namespace: cap
+    creationTimestamp: "2026-09-13T22:07:35Z"
+    generation: 2
+    labels:
+      app.kubernetes.io/component: web
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/name: cap
+      pod-template-hash: 8db6b96f7
+    name: cap-web-8db6b96f7
+    namespace: cap
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: cap-web
+      uid: 29e7414b-6e28-492c-9b83-4b6a8aa3bbf0
+    resourceVersion: "21932"
+    uid: 21aa0ea7-a0b8-4bb9-878d-e62e19100cfd
+  spec:
+    replicas: 0
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: web
+        app.kubernetes.io/instance: cap
+        app.kubernetes.io/name: cap
+        pod-template-hash: 8db6b96f7
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/component: web
+          app.kubernetes.io/instance: cap
+          app.kubernetes.io/name: cap
+          pod-template-hash: 8db6b96f7
+      spec:
+        automountServiceAccountToken: false
+        containers:
+        - envFrom:
+          - configMapRef:
+              name: cap-config
+          - secretRef:
+              name: cap-secrets
+          image: host.docker.internal:5001/cap/cap-web@sha256:5b65d137f7f7ddd767e1acb37380a4609f43287458410515a013157b56cfa83d
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: cap-web
+          ports:
+          - containerPort: 3000
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: cap
+        serviceAccountName: cap
+        terminationGracePeriodSeconds: 30
+  status:
+    observedGeneration: 2
+    replicas: 0
+    terminatingReplicas: 0
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "1"
+      deployment.kubernetes.io/max-replicas: "2"
+      deployment.kubernetes.io/revision: "7"
+      meta.helm.sh/release-name: cap
+      meta.helm.sh/release-namespace: cap
+    creationTimestamp: "2026-09-14T11:41:00Z"
+    generation: 2
+    labels:
+      app.kubernetes.io/component: web
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/name: cap
+      pod-template-hash: b75945d5d
+    name: cap-web-b75945d5d
+    namespace: cap
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: cap-web
+      uid: 29e7414b-6e28-492c-9b83-4b6a8aa3bbf0
+    resourceVersion: "25592"
+    uid: b887f747-6dc4-4be9-b101-f93c882d14ed
+  spec:
+    replicas: 0
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: web
+        app.kubernetes.io/instance: cap
+        app.kubernetes.io/name: cap
+        pod-template-hash: b75945d5d
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/component: web
+          app.kubernetes.io/instance: cap
+          app.kubernetes.io/name: cap
+          pod-template-hash: b75945d5d
+      spec:
+        automountServiceAccountToken: false
+        containers:
+        - env:
+          - name: HTTP_PROXY
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: HTTPS_PROXY
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: http_proxy
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: https_proxy
+            value: http://customer-egress-proxy.customer-egress.svc.cluster.local:8080
+          - name: NO_PROXY
+            value: localhost,127.0.0.1,cap-web,cap-media-server,cap-minio,cap-mysql,customer-egress-proxy,.svc,.svc.cluster.local,.cluster.local,10.43.0.10
+          - name: no_proxy
+            value: localhost,127.0.0.1,cap-web,cap-media-server,cap-minio,cap-mysql,customer-egress-proxy,.svc,.svc.cluster.local,.cluster.local,10.43.0.10
+          - name: NODE_EXTRA_CA_CERTS
+            value: /etc/customer-egress-ca/ca.crt
+          envFrom:
+          - configMapRef:
+              name: cap-config
+          - secretRef:
+              name: cap-secrets
+          image: host.docker.internal:5001/cap/cap-web@sha256:5b65d137f7f7ddd767e1acb37380a4609f43287458410515a013157b56cfa83d
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: cap-web
+          ports:
+          - containerPort: 3000
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /etc/customer-egress-ca/ca.crt
+            name: customer-egress-ca
+            readOnly: true
+            subPath: ca.crt
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: cap
+        serviceAccountName: cap
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: customer-egress-ca
+          secret:
+            defaultMode: 420
+            items:
+            - key: mitmproxy-ca-cert.pem
+              path: ca.crt
+            secretName: customer-egress-ca
+  status:
+    observedGeneration: 2
+    replicas: 0
+    terminatingReplicas: 0
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "1"
+      deployment.kubernetes.io/max-replicas: "2"
+      deployment.kubernetes.io/revision: "2"
+      meta.helm.sh/release-name: cap
+      meta.helm.sh/release-namespace: cap
+    creationTimestamp: "2026-09-13T16:56:02Z"
+    generation: 2
+    labels:
+      app.kubernetes.io/component: web
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/name: cap
+      pod-template-hash: f45f9bb98
+    name: cap-web-f45f9bb98
+    namespace: cap
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: cap-web
+      uid: 29e7414b-6e28-492c-9b83-4b6a8aa3bbf0
+    resourceVersion: "16273"
+    uid: c510f9ca-c715-4d4f-bb5a-5466a044ace4
+  spec:
+    replicas: 0
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: web
+        app.kubernetes.io/instance: cap
+        app.kubernetes.io/name: cap
+        pod-template-hash: f45f9bb98
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/component: web
+          app.kubernetes.io/instance: cap
+          app.kubernetes.io/name: cap
+          pod-template-hash: f45f9bb98
+      spec:
+        automountServiceAccountToken: false
+        containers:
+        - envFrom:
+          - configMapRef:
+              name: cap-config
+          - secretRef:
+              name: cap-secrets
+          image: ghcr.io/capsoftware/cap-web:latest
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: cap-web
+          ports:
+          - containerPort: 3000
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsGroup: 1001
+            runAsNonRoot: true
+            runAsUser: 1001
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: cap
+        serviceAccountName: cap
+        terminationGracePeriodSeconds: 30
+  status:
+    observedGeneration: 2
+    replicas: 0
+    terminatingReplicas: 0
+- apiVersion: apps/v1
+  kind: StatefulSet
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: cap
+      meta.helm.sh/release-namespace: cap
+    creationTimestamp: "2026-09-13T16:04:00Z"
+    generation: 2
+    labels:
+      app.kubernetes.io/component: minio
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: cap
+      app.kubernetes.io/version: 0.6.0
+      helm.sh/chart: cap-0.1.0
+    name: cap-minio
+    namespace: cap
+    resourceVersion: "16228"
+    uid: 82d9017d-b1b2-45e2-90e6-9031c18e317a
+  spec:
+    persistentVolumeClaimRetentionPolicy:
+      whenDeleted: Retain
+      whenScaled: Retain
+    podManagementPolicy: OrderedReady
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: minio
+        app.kubernetes.io/instance: cap
+        app.kubernetes.io/name: cap
+    serviceName: cap-minio
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/component: minio
+          app.kubernetes.io/instance: cap
+          app.kubernetes.io/name: cap
+      spec:
+        automountServiceAccountToken: false
+        containers:
+        - args:
+          - server
+          - /data
+          - --console-address
+          - :9001
+          env:
+          - name: MINIO_ROOT_USER
+            valueFrom:
+              secretKeyRef:
+                key: MINIO_ROOT_USER
+                name: cap-secrets
+          - name: MINIO_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: MINIO_ROOT_PASSWORD
+                name: cap-secrets
+          image: host.docker.internal:5001/cap/minio@sha256:9966a92a734f9411e32f4f41d7d9d826fcdc0f68c4e20b70295bd4e7c11f8a2f
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /minio/health/live
+              port: api
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: minio
+          ports:
+          - containerPort: 9000
+            name: api
+            protocol: TCP
+          - containerPort: 9001
+            name: console
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 12
+            httpGet:
+              path: /minio/health/ready
+              port: api
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /data
+            name: minio-data
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: cap
+        serviceAccountName: cap
+        terminationGracePeriodSeconds: 30
+    updateStrategy:
+      rollingUpdate:
+        partition: 0
+      type: RollingUpdate
+    volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: minio-data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 20Gi
+        volumeMode: Filesystem
+      status:
+        phase: Pending
+  status:
+    availableReplicas: 1
+    collisionCount: 0
+    currentReplicas: 1
+    currentRevision: cap-minio-76fb7d94b4
+    observedGeneration: 2
+    readyReplicas: 1
+    replicas: 1
+    updateRevision: cap-minio-76fb7d94b4
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: StatefulSet
+  metadata:
+    annotations:
+      meta.helm.sh/release-name: cap
+      meta.helm.sh/release-namespace: cap
+    creationTimestamp: "2026-09-13T16:04:00Z"
+    generation: 2
+    labels:
+      app.kubernetes.io/component: mysql
+      app.kubernetes.io/instance: cap
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: cap
+      app.kubernetes.io/version: 0.6.0
+      helm.sh/chart: cap-0.1.0
+    name: cap-mysql
+    namespace: cap
+    resourceVersion: "16242"
+    uid: c656c1ce-6a41-4d35-86df-4e1ceec36fa0
+  spec:
+    persistentVolumeClaimRetentionPolicy:
+      whenDeleted: Retain
+      whenScaled: Retain
+    podManagementPolicy: OrderedReady
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app.kubernetes.io/component: mysql
+        app.kubernetes.io/instance: cap
+        app.kubernetes.io/name: cap
+    serviceName: cap-mysql
+    template:
+      metadata:
+        labels:
+          app.kubernetes.io/component: mysql
+          app.kubernetes.io/instance: cap
+          app.kubernetes.io/name: cap
+      spec:
+        automountServiceAccountToken: false
+        containers:
+        - args:
+          - --max_connections=1000
+          - --default-authentication-plugin=mysql_native_password
+          - --character-set-server=utf8mb4
+          - --collation-server=utf8mb4_unicode_ci
+          env:
+          - name: MYSQL_DATABASE
+            value: cap
+          - name: MYSQL_USER
+            value: cap
+          - name: MYSQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: MYSQL_PASSWORD
+                name: cap-secrets
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: MYSQL_ROOT_PASSWORD
+                name: cap-secrets
+          image: host.docker.internal:5001/cap/mysql@sha256:213bbfaf699693a40a20a12bb4342d2589a15a3dc7153db698eaed252a92458e
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+              - sh
+              - -c
+              - mysqladmin ping -h 127.0.0.1 -u"$MYSQL_USER" -p"$MYSQL_PASSWORD"
+            failureThreshold: 3
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: mysql
+          ports:
+          - containerPort: 3306
+            name: mysql
+            protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+              - sh
+              - -c
+              - mysqladmin ping -h 127.0.0.1 -u"$MYSQL_USER" -p"$MYSQL_PASSWORD"
+            failureThreshold: 12
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /var/lib/mysql
+            name: mysql-data
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        serviceAccount: cap
+        serviceAccountName: cap
+        terminationGracePeriodSeconds: 30
+    updateStrategy:
+      rollingUpdate:
+        partition: 0
+      type: RollingUpdate
+    volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: mysql-data
+      spec:
+        accessModes:
+        - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi
+        volumeMode: Filesystem
+      status:
+        phase: Pending
+  status:
+    availableReplicas: 1
+    collisionCount: 0
+    currentReplicas: 1
+    currentRevision: cap-mysql-6fc58b5f7f
+    observedGeneration: 2
+    readyReplicas: 1
+    replicas: 1
+    updateRevision: cap-mysql-6fc58b5f7f
+    updatedReplicas: 1
+kind: List
+metadata:
+  resourceVersion: ""

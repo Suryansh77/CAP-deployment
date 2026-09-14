@@ -1,0 +1,23 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  annotations:
+    meta.helm.sh/release-name: cap
+    meta.helm.sh/release-namespace: cap
+  creationTimestamp: "2026-09-14T09:22:49Z"
+  generation: 1
+  labels:
+    app.kubernetes.io/managed-by: Helm
+  name: cap-private-registry
+  resourceVersion: "18317"
+  uid: 0f32671e-b720-4e93-8b9d-610284682a1b
+spec:
+  matchResources:
+    matchPolicy: Equivalent
+    namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: cap
+    objectSelector: {}
+  policyName: cap-private-registry
+  validationActions:
+  - Deny

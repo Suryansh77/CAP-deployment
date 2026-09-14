@@ -1,0 +1,57 @@
+=== CAP SECURITY RESOURCE INVENTORY ===
+Mon Sep 14 20:52:52 IST 2026
+
+--- ServiceAccounts ---
+NAME           AGE
+cap            23h
+cap-deployer   17h
+default        23h
+
+--- Roles ---
+NAME           CREATED AT
+cap-deployer   2026-09-13T22:07:35Z
+
+--- RoleBindings ---
+NAME           ROLE                AGE
+cap-deployer   Role/cap-deployer   17h
+
+--- NetworkPolicies ---
+NAME                                          POD-SELECTOR                               AGE
+allow-dns-egress                              <none>                                     21h
+allow-media-server-to-customer-egress-proxy   app.kubernetes.io/component=media-server   4h6m
+allow-media-server-to-web                     app.kubernetes.io/component=media-server   21h
+allow-media-server-to-web-ingress             app.kubernetes.io/component=web            21h
+allow-minio-setup-ingress                     app.kubernetes.io/component=minio          19h
+allow-minio-setup-to-minio                    app.kubernetes.io/component=minio-setup    19h
+allow-web-required-egress                     app.kubernetes.io/component=web            21h
+allow-web-to-customer-egress-proxy            app.kubernetes.io/component=web            4h6m
+allow-web-to-media-server                     app.kubernetes.io/component=media-server   21h
+allow-web-to-minio                            app.kubernetes.io/component=minio          21h
+allow-web-to-mysql                            app.kubernetes.io/component=web            21h
+allow-web-to-mysql-ingress                    app.kubernetes.io/component=mysql          21h
+default-deny-ingress-egress                   <none>                                     21h
+
+--- PVCs ---
+NAME                     STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+minio-data-cap-minio-0   Bound    pvc-0f18c018-915f-47f3-ad43-1dd6fa1d6c00   20Gi       RWO            local-path     <unset>                 23h
+mysql-data-cap-mysql-0   Bound    pvc-028d6cb7-5a79-485a-b81a-9b9fc1513f5c   10Gi       RWO            local-path     <unset>                 23h
+
+--- Secrets: metadata only ---
+NAME                         TYPE                 DATA   AGE
+cap-secrets                  Opaque               10     23h
+customer-egress-ca           Opaque               1      3h46m
+sh.helm.release.v1.cap.v10   helm.sh/release.v1   1      5h56m
+sh.helm.release.v1.cap.v11   helm.sh/release.v1   1      4h
+sh.helm.release.v1.cap.v12   helm.sh/release.v1   1      3h50m
+sh.helm.release.v1.cap.v13   helm.sh/release.v1   1      3h46m
+sh.helm.release.v1.cap.v14   helm.sh/release.v1   1      3h41m
+sh.helm.release.v1.cap.v15   helm.sh/release.v1   1      87m
+sh.helm.release.v1.cap.v16   helm.sh/release.v1   1      80m
+sh.helm.release.v1.cap.v17   helm.sh/release.v1   1      62m
+sh.helm.release.v1.cap.v18   helm.sh/release.v1   1      43m
+sh.helm.release.v1.cap.v19   helm.sh/release.v1   1      29m
+
+--- ConfigMaps ---
+NAME               DATA   AGE
+cap-config         10     23h
+kube-root-ca.crt   1      23h

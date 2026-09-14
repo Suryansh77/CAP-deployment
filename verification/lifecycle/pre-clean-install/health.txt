@@ -1,0 +1,103 @@
+=== PRE-CLEAN-INSTALL HEALTH ===
+Mon Sep 14 20:50:27 IST 2026
+
+--- Helm ---
+NAME: cap
+LAST DEPLOYED: Mon Sep 14 20:23:26 2026
+NAMESPACE: cap
+STATUS: deployed
+REVISION: 19
+DESCRIPTION: Upgrade complete
+RESOURCES:
+==> v1/Deployment
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+cap-media-server   1/1     1            1           23h
+cap-web   1/1   1     1     23h
+
+==> v1/Pod(related)
+NAME                                READY   STATUS    RESTARTS   AGE
+cap-media-server-7bd67f67d6-4h8wb   1/1     Running   0          60m
+cap-web-6bc694bfc9-sg9c2   1/1   Running   0     60m
+cap-minio-0   1/1   Running   0     17h
+cap-mysql-0   1/1   Running   0     17h
+
+==> v1/StatefulSet
+NAME        READY   AGE
+cap-minio   1/1     23h
+cap-mysql   1/1   23h
+
+==> v1/ValidatingAdmissionPolicy
+NAME                   VALIDATIONS   PARAMKIND   AGE
+cap-private-registry   1             <unset>     5h57m
+
+==> v1/ServiceAccount
+NAME           AGE
+cap-deployer   17h
+cap   23h
+
+==> v1/Role
+NAME           CREATED AT
+cap-deployer   2026-09-13T22:07:35Z
+
+==> v1/Ingress
+NAME   CLASS     HOSTS       ADDRESS        PORTS   AGE
+cap    traefik   cap.local   192.168.64.2   80      23h
+
+==> v1/ValidatingAdmissionPolicyBinding
+NAME                   POLICYNAME             PARAMREF   AGE
+cap-private-registry   cap-private-registry   <unset>    5h57m
+
+==> v1/Secret
+NAME          TYPE     DATA   AGE
+cap-secrets   Opaque   10     23h
+
+==> v1/ConfigMap
+NAME         DATA   AGE
+cap-config   10     23h
+
+==> v1/RoleBinding
+NAME           ROLE                AGE
+cap-deployer   Role/cap-deployer   17h
+
+==> v1/Service
+NAME               TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+cap-media-server   ClusterIP   10.43.205.189   <none>        3456/TCP   23h
+cap-minio   ClusterIP   10.43.84.250   <none>   9000/TCP   23h
+cap-mysql   ClusterIP   None   <none>   3306/TCP   23h
+cap-web   ClusterIP   10.43.45.229   <none>   3000/TCP   23h
+
+
+TEST SUITE: None
+
+--- Pods ---
+NAME                                READY   STATUS    RESTARTS   AGE   IP           NODE                   NOMINATED NODE   READINESS GATES
+cap-media-server-7bd67f67d6-4h8wb   1/1     Running   0          60m   10.42.0.90   lima-rancher-desktop   <none>           <none>
+cap-minio-0                         1/1     Running   0          17h   10.42.0.57   lima-rancher-desktop   <none>           <none>
+cap-mysql-0                         1/1     Running   0          17h   10.42.0.58   lima-rancher-desktop   <none>           <none>
+cap-web-6bc694bfc9-sg9c2            1/1     Running   0          60m   10.42.0.91   lima-rancher-desktop   <none>           <none>
+
+--- Services ---
+NAME               TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+cap-media-server   ClusterIP   10.43.205.189   <none>        3456/TCP   23h
+cap-minio          ClusterIP   10.43.84.250    <none>        9000/TCP   23h
+cap-mysql          ClusterIP   None            <none>        3306/TCP   23h
+cap-web            ClusterIP   10.43.45.229    <none>        3000/TCP   23h
+
+--- PVCs ---
+NAME                     STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
+minio-data-cap-minio-0   Bound    pvc-0f18c018-915f-47f3-ad43-1dd6fa1d6c00   20Gi       RWO            local-path     <unset>                 23h
+mysql-data-cap-mysql-0   Bound    pvc-028d6cb7-5a79-485a-b81a-9b9fc1513f5c   10Gi       RWO            local-path     <unset>                 23h
+
+--- Admission ---
+NAME                   VALIDATIONS   PARAMKIND   AGE
+cap-private-registry   1             <unset>     5h57m
+NAME                   POLICYNAME             PARAMREF   AGE
+cap-private-registry   cap-private-registry   <unset>    5h57m
+
+--- Egress ---
+NAME                                             READY   STATUS    RESTARTS   AGE   IP            NODE                   NOMINATED NODE   READINESS GATES
+customer-egress-proxy-57c548647-9gm6h            1/1     Running   0          26m   10.42.0.108   lima-rancher-desktop   <none>           <none>
+customer-egress-upstream-test-6d8bfd958b-7qkpv   1/1     Running   0          27m   10.42.0.103   lima-rancher-desktop   <none>           <none>
+NAME                    TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+customer-egress-proxy   ClusterIP   10.43.134.123   <none>        8080/TCP   4h10m
+egress-test             ClusterIP   10.43.145.230   <none>        8443/TCP   3h32m

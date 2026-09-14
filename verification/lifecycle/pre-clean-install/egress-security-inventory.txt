@@ -1,0 +1,23 @@
+=== CUSTOMER EGRESS SECURITY RESOURCE INVENTORY ===
+Mon Sep 14 20:52:53 IST 2026
+
+--- ServiceAccounts ---
+NAME      AGE
+default   4h27m
+
+--- NetworkPolicies ---
+NAME                            POD-SELECTOR                                   AGE
+customer-egress-proxy-egress    app.kubernetes.io/name=customer-egress-proxy   4h11m
+customer-egress-proxy-ingress   app.kubernetes.io/name=customer-egress-proxy   4h11m
+
+--- Secrets: metadata only ---
+NAME                                TYPE                DATA   AGE
+customer-egress-ca                  Opaque              2      4h27m
+customer-egress-upstream-ca         Opaque              1      3h35m
+customer-egress-upstream-test-tls   kubernetes.io/tls   2      3h35m
+
+--- ConfigMaps ---
+NAME                                   DATA   AGE
+customer-egress-proxy-config           2      4h22m
+customer-egress-upstream-test-server   1      3h34m
+kube-root-ca.crt                       1      4h27m
