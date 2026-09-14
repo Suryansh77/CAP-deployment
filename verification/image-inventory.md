@@ -1,30 +1,70 @@
-# Image Inventory and Provenance Baseline
+# Image Inventory
 
-This inventory records the runtime artifacts identified from the upstream Cap
-deployment and the immutable digests observed in the local environment.
+This inventory separates customer runtime images from build, bootstrap,
+verification, developer, CI, and cluster-system images.
 
-| Component | Upstream reference | Registry | Digest observed | Artifact type | Customer-registry treatment |
-|---|---|---|---|---|---|
-| Cap Web | `ghcr.io/capsoftware/cap-web:latest` | GHCR | `sha256:8ee4cbd3fd87f88f538831aed06c954c525db9c2426a62abeaf0ca307c5e1ce9` | Runtime | Promote exact digest to private registry |
-| Cap Media Server | `ghcr.io/capsoftware/cap-media-server:latest` | GHCR | `sha256:886ecc9b5684686410c691d13f94c678492b4ebaba3de0d295cdda63c64c04fe` | Runtime | Promote exact digest to private registry |
-| MySQL | `mysql:8.0` | Docker Hub | `sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b` | Runtime | Promote exact digest to private registry |
-| MinIO | `quay.io/minio/minio:latest` | Quay | `sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e` | Runtime | Promote exact digest to private registry |
-| MinIO MC | `quay.io/minio/mc:latest` | Quay | `sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727` | Runtime / init | Promote exact digest to private registry |
+## Customer runtime images
 
-## Build bases identified from source
+| Component | Source image | Deployed image | Purpose | Supply-chain treatment |
+|---|---|---|---|---|
+| Web | `ghcr.io/capsoftware/cap-web:latest` | Private registry, digest pinned | Next.js application | Promoted to private registry; digest pinned |
+| Media server | `ghcr.io/capsoftware/cap-media-server:latest` | Private registry, digest pinned | FFmpeg/media processing | Promoted to private registry; digest pinned |
+| MySQL | `mysql:8.0` | Private registry, digest pinned | Application database | Promoted to private registry; digest pinned |
+| MinIO | `minio/minio:latest` | Private registry, digest pinned | S3-compatible object storage | Promoted to private registry; digest pinned |
+| MinIO client | `minio/mc:latest` | Private registry, digest pinned | Bucket initialization hook | Promoted to private registry; digest pinned |
+| Customer egress proxy | `mitmproxy/mitmproxy` | Private registry, digest pinned | Customer-controlled TLS-intercepting egress proxy | Promoted to private registry; digest pinned |
 
-| Component | Dockerfile | Base image | Treatment |
-|---|---|---|---|
-| Cap Web | `apps/web/Dockerfile` | `oven/bun:1.4.0-alpine` | Build-time dependency; must be available to the controlled build environment |
-| Cap Web | `apps/web/Dockerfile` | `node:24-alpine` | Build/runtime base used while building Cap Web |
-| Cap Media Server | `apps/media-server/Dockerfile.standalone` | `oven/bun:1.4.0` | Build-time dependency; must be available to the controlled build environment |
+## Build-stage images
 
-## Verification boundary
+| Image | Source | Runtime? | Notes |
+|---|---|---:|---|
+| `oven/bun:1.4.0-alpine` | `apps/web/Dockerfile` | No | Web build stage |
+| `node:24-alpine` | `apps/web/Dockerfile` | No | Web base/runtime build image; deployed web image is prebuilt |
+| `oven/bun:1.4.0` | Media Dockerfiles | No | Media-server build stage |
 
-The digests above establish the exact image artifacts observed locally at the
-time of inventory creation. They are the identities to carry into the
-customer-registry promotion process rather than relying on mutable `latest`
-tags.
+These images must be available to whatever trusted build/promotion environment
+produces the customer runtime artifacts, but they are not customer-cluster
+runtime dependencies.
 
-Independent signature/attestation verification has not yet been performed.
-That remains an explicit supply-chain control to implement or document.
+## Bootstrap images
+
+| Image | Runtime? | Notes |
+|---|---:|---|
+| `registry:2` | No | Local HTTPS private-registry bootstrap only |
+
+The bootstrap registry is intentionally outside the customer application
+runtime image set.
+
+## Verification / test images
+
+Verification images are used only to test admission, egress, TLS interception,
+or deployment behavior. They are not part of the application runtime supply
+chain.
+
+## Developer / observability images
+
+| Image | Runtime? | Notes |
+|---|---:|---|
+| `docker.io/grafana/otel-lgtm` | No | Local development/observability tooling |
+
+## Other source references
+
+The source repository also contains references such as
+`bitnami/minio:latest` in `docker-compose.template.yml` and dynamically
+generated GHCR images in CI workflows.
+
+These were discovered during the repository sweep but are not used by the
+customer Kubernetes runtime.
+
+## Live cluster verification
+
+The local deployment was inspected directly with Kubernetes and showed:
+
+- All Cap application images use the private registry.
+- All deployed Cap images are digest-pinned.
+- The customer egress proxy image is also private and digest-pinned.
+- Rancher/K3s images are platform infrastructure rather than Cap application
+  supply-chain dependencies.
+
+Live image evidence is archived separately with the installation and
+verification logs.
