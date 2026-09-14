@@ -4,7 +4,7 @@ PEER_CN=egress-test.customer-egress.svc.cluster.local
 ISSUER_CN=Zamp Customer Egress CA
 HTTP/1.0 200 OK
 Server: BaseHTTP/0.6 Python/3.14.5
-Date: Mon, 14 Sep 2026 18:44:27 GMT
+Date: Mon, 14 Sep 2026 19:09:00 GMT
 Content-Type: text/plain
 Content-Length: 28
 

@@ -1,2 +1,2 @@
 NAME                 READY   STATUS    RESTARTS   AGE   IP            NODE                   NOMINATED NODE   READINESS GATES
-registry-pull-test   1/1     Running   0          2s    10.42.0.137   lima-rancher-desktop   <none>           <none>
+registry-pull-test   1/1     Running   0          2s    10.42.0.143   lima-rancher-desktop   <none>           <none>

@@ -1,14 +1,16 @@
 Defaulted container "mitmproxy" out of: mitmproxy, initialize-mitmproxy (init)
-[18:44:22.132] Loading script /config/allowlist.py
-[18:44:22.134] EGRESS_POLICY_LOADED entries=1 source=/config/allowlist.txt
-[18:44:22.137] HTTP(S) proxy listening at *:8080.
-[18:44:26.040][10.42.0.1:41694] client connect
-[18:44:26.041][10.42.0.1:41694] client disconnect
-[18:44:26.999][10.42.0.116:54350] client connect
-[18:44:27.001] EGRESS ALLOW CONNECT host=egress-test.customer-egress.svc.cluster.local port=8443
-[18:44:27.004][10.42.0.116:54350] server connect egress-test.customer-egress.svc.cluster.local:8443 (10.43.172.72:8443)
-[18:44:27.028] EGRESS ALLOW host=egress-test.customer-egress.svc.cluster.local port=8443
-10.42.0.116:54350: GET https://egress-test.customer-egress.svc.cluster.local:8… HTTP/1.1
+[19:08:55.968] Loading script /config/allowlist.py
+[19:08:55.969] EGRESS_POLICY_LOADED entries=1 source=/config/allowlist.txt
+[19:08:55.970] HTTP(S) proxy listening at *:8080.
+[19:08:59.665][10.42.0.1:58118] client connect
+[19:08:59.666][10.42.0.1:58132] client connect
+[19:08:59.668][10.42.0.1:58118] client disconnect
+[19:08:59.668][10.42.0.1:58132] client disconnect
+[19:08:59.978][10.42.0.116:46362] client connect
+[19:08:59.985] EGRESS ALLOW CONNECT host=egress-test.customer-egress.svc.cluster.local port=8443
+[19:08:59.995][10.42.0.116:46362] server connect egress-test.customer-egress.svc.cluster.local:8443 (10.43.172.72:8443)
+[19:09:00.028] EGRESS ALLOW host=egress-test.customer-egress.svc.cluster.local port=8443
+10.42.0.116:46362: GET https://egress-test.customer-egress.svc.cluster.local:8… HTTP/1.1
        << HTTP/1.0 200 OK 28b
-[18:44:27.031][10.42.0.116:54350] server disconnect egress-test.customer-egress.svc.cluster.local:8443 (10.43.172.72:8443)
-[18:44:27.031][10.42.0.116:54350] client disconnect
+[19:09:00.031][10.42.0.116:46362] server disconnect egress-test.customer-egress.svc.cluster.local:8443 (10.43.172.72:8443)
+[19:09:00.031][10.42.0.116:46362] client disconnect
