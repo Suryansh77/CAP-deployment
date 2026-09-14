@@ -1,132 +1,157 @@
 === Private Registry Promotion ===
-Mon Sep 14 00:56:50 IST 2026
-Registry: localhost:5001
+Mon Sep 14 18:52:06 IST 2026
+Registry: host.docker.internal:5001
+Scheme: https
+CA: environment/local-registry/certs/ca.crt
+Verification IP: 127.0.0.1
 
 Checking registry...
 REGISTRY_OK
 
 
-=== ghcr.io/capsoftware/cap-web:latest -> localhost:5001/cap/cap-web:latest ===
+=== ghcr.io/capsoftware/cap-web:latest -> host.docker.internal:5001/cap/cap-web:latest ===
 SOURCE_IMAGE_PRESENT
-The push refers to repository [localhost:5001/cap/cap-web]
-b3054c2391f3: Unavailable
-38f14a62bdc9: Unavailable
-268b405c1f00: Unavailable
-67e49a3832eb: Unavailable
-54c126d15664: Pushed
-a088f1471ad9: Pushed
-6f93fb0c7078: Pushed
-38f14a62bdc9: Pushed
-77f36cabdad6: Pushed
-5d197bc623c5: Pushed
-3cbf36db0a18: Pushed
-67e49a3832eb: Pushed
-5de55e5ef9c0: Pushed
-268b405c1f00: Pushed
-9a37412b51ce: Pushed
-b3054c2391f3: Pushed
+The push refers to repository [host.docker.internal:5001/cap/cap-web]
+54c126d15664: Layer already exists
+38f14a62bdc9: Layer already exists
+77f36cabdad6: Layer already exists
+a088f1471ad9: Layer already exists
+5d197bc623c5: Layer already exists
+9a37412b51ce: Layer already exists
+268b405c1f00: Layer already exists
+5de55e5ef9c0: Layer already exists
+3cbf36db0a18: Layer already exists
+67e49a3832eb: Layer already exists
+6f93fb0c7078: Layer already exists
+b3054c2391f3: Layer already exists
 latest: digest: sha256:5b65d137f7f7ddd767e1acb37380a4609f43287458410515a013157b56cfa83d size: 2576
 
  Info -> Not all multiplatform-content is present and only the available single-platform image was pushed
          sha256:8ee4cbd3fd87f88f538831aed06c954c525db9c2426a62abeaf0ca307c5e1ce9 -> sha256:5b65d137f7f7ddd767e1acb37380a4609f43287458410515a013157b56cfa83d
 PUBLISHED_DIGEST:
-local-image-id=sha256:8ee4cbd3fd87f88f538831aed06c954c525db9c2426a62abeaf0ca307c5e1ce9 local-repo-digests=["ghcr.io/capsoftware/cap-web@sha256:8ee4cbd3fd87f88f538831aed06c954c525db9c2426a62abeaf0ca307c5e1ce9","localhost:5001/cap/cap-web@sha256:8ee4cbd3fd87f88f538831aed06c954c525db9c2426a62abeaf0ca307c5e1ce9"]
+local-image-id=sha256:8ee4cbd3fd87f88f538831aed06c954c525db9c2426a62abeaf0ca307c5e1ce9 local-repo-digests=["ghcr.io/capsoftware/cap-web@sha256:8ee4cbd3fd87f88f538831aed06c954c525db9c2426a62abeaf0ca307c5e1ce9","host.docker.internal:5001/cap/cap-web@sha256:8ee4cbd3fd87f88f538831aed06c954c525db9c2426a62abeaf0ca307c5e1ce9","localhost:5001/cap/cap-web@sha256:8ee4cbd3fd87f88f538831aed06c954c525db9c2426a62abeaf0ca307c5e1ce9"]
 REGISTRY_MANIFEST:
-no such manifest: localhost:5001/cap/cap-web:latest
+registry=host.docker.internal:5001
+repository=cap/cap-web
+tag=latest
+mediaType=application/vnd.oci.image.manifest.v1+json
+schemaVersion=2
+configDigest=sha256:301e2418fb798f3c5430549dcb02508e52c17647b9b9d0dff9389b77b8f085de
+layerCount=12
+REGISTRY_MANIFEST_OK
 
-=== ghcr.io/capsoftware/cap-media-server:latest -> localhost:5001/cap/cap-media-server:latest ===
+=== ghcr.io/capsoftware/cap-media-server:latest -> host.docker.internal:5001/cap/cap-media-server:latest ===
 SOURCE_IMAGE_PRESENT
-The push refers to repository [localhost:5001/cap/cap-media-server]
-849ff117b1b6: Unavailable
-ffa31c0ebb97: Unavailable
-018e5aeb5455: Unavailable
-b265875bf0ba: Unavailable
-4300936ddc96: Unavailable
-5660e03f193a: Pushed
-849ff117b1b6: Unavailable
-cac8e46c0da1: Pushed
-ffa31c0ebb97: Unavailable
-b265875bf0ba: Unavailable
-4300936ddc96: Unavailable
-849ff117b1b6: Pushed
-3b55cc7edf0e: Pushed
-5b39c6cccbda: Pushed
-b265875bf0ba: Pushed
-215d9cfe0702: Pushed
-4300936ddc96: Pushed
-aeb6370497d2: Pushed
-018e5aeb5455: Pushed
-77e34267f227: Pushed
-ffa31c0ebb97: Pushed
+The push refers to repository [host.docker.internal:5001/cap/cap-media-server]
+cac8e46c0da1: Layer already exists
+3b55cc7edf0e: Layer already exists
+77e34267f227: Layer already exists
+aeb6370497d2: Layer already exists
+4300936ddc96: Layer already exists
+5b39c6cccbda: Layer already exists
+ffa31c0ebb97: Layer already exists
+5660e03f193a: Layer already exists
+018e5aeb5455: Layer already exists
+849ff117b1b6: Layer already exists
+b265875bf0ba: Layer already exists
+215d9cfe0702: Layer already exists
 latest: digest: sha256:98c0c73f5fa8939aba239f2c91d556f5f97177f3147c3f6aa548a0c3e848abca size: 2575
 
  Info -> Not all multiplatform-content is present and only the available single-platform image was pushed
          sha256:886ecc9b5684686410c691d13f94c678492b4ebaba3de0d295cdda63c64c04fe -> sha256:98c0c73f5fa8939aba239f2c91d556f5f97177f3147c3f6aa548a0c3e848abca
 PUBLISHED_DIGEST:
-local-image-id=sha256:886ecc9b5684686410c691d13f94c678492b4ebaba3de0d295cdda63c64c04fe local-repo-digests=["ghcr.io/capsoftware/cap-media-server@sha256:886ecc9b5684686410c691d13f94c678492b4ebaba3de0d295cdda63c64c04fe","localhost:5001/cap/cap-media-server@sha256:886ecc9b5684686410c691d13f94c678492b4ebaba3de0d295cdda63c64c04fe"]
+local-image-id=sha256:886ecc9b5684686410c691d13f94c678492b4ebaba3de0d295cdda63c64c04fe local-repo-digests=["ghcr.io/capsoftware/cap-media-server@sha256:886ecc9b5684686410c691d13f94c678492b4ebaba3de0d295cdda63c64c04fe","host.docker.internal:5001/cap/cap-media-server@sha256:886ecc9b5684686410c691d13f94c678492b4ebaba3de0d295cdda63c64c04fe","localhost:5001/cap/cap-media-server@sha256:886ecc9b5684686410c691d13f94c678492b4ebaba3de0d295cdda63c64c04fe"]
 REGISTRY_MANIFEST:
-no such manifest: localhost:5001/cap/cap-media-server:latest
+registry=host.docker.internal:5001
+repository=cap/cap-media-server
+tag=latest
+mediaType=application/vnd.oci.image.manifest.v1+json
+schemaVersion=2
+configDigest=sha256:ed5d49e711779e9495d4e097cb12c95aa40d93bb16c1026fea23253c95b3e639
+layerCount=12
+REGISTRY_MANIFEST_OK
 
-=== mysql:8.0 -> localhost:5001/cap/mysql:8.0 ===
+=== mysql:8.0 -> host.docker.internal:5001/cap/mysql:8.0 ===
 SOURCE_IMAGE_PRESENT
-The push refers to repository [localhost:5001/cap/mysql]
-70a53223cb4c: Pushed
-e9b2852d2a9d: Pushed
-4fcb28d1dfcf: Pushed
-42505e6e6b91: Pushed
-11c0b299cb47: Pushed
-7ce425b17caf: Pushed
-1959e4a06a1c: Pushed
-7b9f24d93d52: Pushed
-605b7f42ac6e: Pushed
-ad770837e789: Pushed
-fa30ab141b5a: Pushed
+The push refers to repository [host.docker.internal:5001/cap/mysql]
+42505e6e6b91: Layer already exists
+4fcb28d1dfcf: Layer already exists
+7ce425b17caf: Layer already exists
+7b9f24d93d52: Layer already exists
+605b7f42ac6e: Layer already exists
+1959e4a06a1c: Layer already exists
+fa30ab141b5a: Layer already exists
+e9b2852d2a9d: Layer already exists
+ad770837e789: Layer already exists
+70a53223cb4c: Layer already exists
+11c0b299cb47: Layer already exists
 8.0: digest: sha256:213bbfaf699693a40a20a12bb4342d2589a15a3dc7153db698eaed252a92458e size: 3047
 
  Info -> Not all multiplatform-content is present and only the available single-platform image was pushed
          sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b -> sha256:213bbfaf699693a40a20a12bb4342d2589a15a3dc7153db698eaed252a92458e
 PUBLISHED_DIGEST:
-local-image-id=sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b local-repo-digests=["mysql@sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b","localhost:5001/cap/mysql@sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b"]
+local-image-id=sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b local-repo-digests=["mysql@sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b","host.docker.internal:5001/cap/mysql@sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b","localhost:5001/cap/mysql@sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b"]
 REGISTRY_MANIFEST:
-no such manifest: localhost:5001/cap/mysql:8.0
+registry=host.docker.internal:5001
+repository=cap/mysql
+tag=8.0
+mediaType=application/vnd.oci.image.manifest.v1+json
+schemaVersion=2
+configDigest=sha256:b7e118f56c5963e079252e0d6e2978c9c010eb7fc7aaaec100e367796b5dd08f
+layerCount=11
+REGISTRY_MANIFEST_OK
 
-=== quay.io/minio/minio:latest -> localhost:5001/cap/minio:latest ===
+=== quay.io/minio/minio:latest -> host.docker.internal:5001/cap/minio:latest ===
 SOURCE_IMAGE_PRESENT
-The push refers to repository [localhost:5001/cap/minio]
-1e1cfd58aa02: Pushed
-c75db12fb9c0: Pushed
-4e6e13ec1e11: Pushed
-2f0dae0f0359: Pushed
-4ca31cd8344e: Pushed
-7c6ea1bdb2f6: Pushed
-f06361c774fa: Pushed
-7b79da5d3567: Pushed
-166b5f0a4239: Pushed
+The push refers to repository [host.docker.internal:5001/cap/minio]
+4e6e13ec1e11: Layer already exists
+4ca31cd8344e: Layer already exists
+c75db12fb9c0: Layer already exists
+7b79da5d3567: Layer already exists
+166b5f0a4239: Layer already exists
+7c6ea1bdb2f6: Layer already exists
+2f0dae0f0359: Layer already exists
+f06361c774fa: Layer already exists
+1e1cfd58aa02: Layer already exists
 latest: digest: sha256:9966a92a734f9411e32f4f41d7d9d826fcdc0f68c4e20b70295bd4e7c11f8a2f size: 2081
 
  Info -> Not all multiplatform-content is present and only the available single-platform image was pushed
          sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e -> sha256:9966a92a734f9411e32f4f41d7d9d826fcdc0f68c4e20b70295bd4e7c11f8a2f
 PUBLISHED_DIGEST:
-local-image-id=sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e local-repo-digests=["localhost:5001/cap/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e","quay.io/minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e"]
+local-image-id=sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e local-repo-digests=["host.docker.internal:5001/cap/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e","localhost:5001/cap/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e","quay.io/minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e"]
 REGISTRY_MANIFEST:
-no such manifest: localhost:5001/cap/minio:latest
+registry=host.docker.internal:5001
+repository=cap/minio
+tag=latest
+mediaType=application/vnd.docker.distribution.manifest.v2+json
+schemaVersion=2
+configDigest=sha256:8f08aee614800a237906bd48114d733e5ac5bfac4ccdf731f141b0e880d7a253
+layerCount=9
+REGISTRY_MANIFEST_OK
 
-=== quay.io/minio/mc:latest -> localhost:5001/cap/minio-mc:latest ===
+=== quay.io/minio/mc:latest -> host.docker.internal:5001/cap/minio-mc:latest ===
 SOURCE_IMAGE_PRESENT
-The push refers to repository [localhost:5001/cap/minio-mc]
-4ca31cd8344e: Mounted from cap/minio
-7a83c90b7412: Pushed
-c55e3179fbbb: Pushed
-ecf8c1ada8f7: Pushed
-09ba9cd49d15: Pushed
-9da136e89c8d: Pushed
+The push refers to repository [host.docker.internal:5001/cap/minio-mc]
+ecf8c1ada8f7: Layer already exists
+7a83c90b7412: Layer already exists
+c55e3179fbbb: Layer already exists
+09ba9cd49d15: Layer already exists
+4ca31cd8344e: Layer already exists
+9da136e89c8d: Layer already exists
 latest: digest: sha256:37d109dddbbb2c95873f5fc81ac93f37023264770fc580a7564148892087b1b7 size: 1490
 
  Info -> Not all multiplatform-content is present and only the available single-platform image was pushed
          sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727 -> sha256:37d109dddbbb2c95873f5fc81ac93f37023264770fc580a7564148892087b1b7
 PUBLISHED_DIGEST:
-local-image-id=sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727 local-repo-digests=["localhost:5001/cap/minio-mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727","quay.io/minio/mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727"]
+local-image-id=sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727 local-repo-digests=["host.docker.internal:5001/cap/minio-mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727","localhost:5001/cap/minio-mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727","quay.io/minio/mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727"]
 REGISTRY_MANIFEST:
-no such manifest: localhost:5001/cap/minio-mc:latest
+registry=host.docker.internal:5001
+repository=cap/minio-mc
+tag=latest
+mediaType=application/vnd.docker.distribution.manifest.v2+json
+schemaVersion=2
+configDigest=sha256:5dee113ef037d349ac22ab6c20193ade5c4701e2a38e3777fa1c1bec1c063ad1
+layerCount=6
+REGISTRY_MANIFEST_OK
 
 === Promotion complete ===
