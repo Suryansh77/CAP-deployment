@@ -1,0 +1,33 @@
+Defaulted container "mitmproxy" out of: mitmproxy, initialize-mitmproxy (init)
+[14:53:19.042] Loading script /config/allowlist.py
+[14:53:19.043] EGRESS_POLICY_LOADED entries=1 source=/config/allowlist.txt
+[14:53:19.093] HTTP(S) proxy listening at *:8080.
+[14:53:24.835][10.42.0.1:56226] client connect
+[14:53:24.838][10.42.0.1:56226] client disconnect
+[14:53:29.830][10.42.0.1:56242] client connect
+[14:53:29.832][10.42.0.1:56242] client disconnect
+[14:53:34.829][10.42.0.1:40330] client connect
+[14:53:34.830][10.42.0.1:40330] client disconnect
+[14:53:36.544][10.42.0.1:40340] client connect
+[14:53:36.548][10.42.0.1:40340] client disconnect
+[14:53:39.828][10.42.0.1:40352] client connect
+[14:53:39.829][10.42.0.1:40352] client disconnect
+[14:53:44.832][10.42.0.1:44084] client connect
+[14:53:44.834][10.42.0.1:44084] client disconnect
+[14:53:46.534][10.42.0.1:44094] client connect
+[14:53:46.536][10.42.0.1:44094] client disconnect
+[14:53:49.828][10.42.0.1:44106] client connect
+[14:53:49.829][10.42.0.1:44106] client disconnect
+[14:53:54.829][10.42.0.1:44764] client connect
+[14:53:54.830][10.42.0.1:44764] client disconnect
+[14:53:56.538][10.42.0.1:44780] client connect
+[14:53:56.540][10.42.0.1:44780] client disconnect
+[14:53:59.833][10.42.0.1:44790] client connect
+[14:53:59.834][10.42.0.1:44790] client disconnect
+[14:54:04.828][10.42.0.1:44860] client connect
+[14:54:04.829][10.42.0.1:44860] client disconnect
+[14:54:05.586][10.42.0.91:54504] client connect
+[14:54:05.592] EGRESS DENY CONNECT host=example.com port=443
+10.42.0.91:54504: CONNECT example.com:443
+               << 403 Forbidden 34b
+[14:54:05.595][10.42.0.91:54504] client disconnect

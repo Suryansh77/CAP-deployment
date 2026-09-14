@@ -4,10 +4,6 @@ metadata:
   name: customer-egress-proxy-config
   namespace: customer-egress
 data:
-  allowlist.txt: |
-    # Controlled verification-only destination.
-    egress-test.customer-egress.svc.cluster.local:8443
-
   allowlist.py: |
     from mitmproxy import ctx, http
 

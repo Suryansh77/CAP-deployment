@@ -1,8 +1,8 @@
 === Private Registry Promotion ===
-Mon Sep 14 18:52:06 IST 2026
+Mon Sep 14 20:23:10 IST 2026
 Registry: host.docker.internal:5001
 Scheme: https
-CA: environment/local-registry/certs/ca.crt
+CA: /Users/suryansh.kathayat/zamp-cap-assignment/environment/local-registry/certs/ca.crt
 Verification IP: 127.0.0.1
 
 Checking registry...
@@ -12,17 +12,17 @@ REGISTRY_OK
 === ghcr.io/capsoftware/cap-web:latest -> host.docker.internal:5001/cap/cap-web:latest ===
 SOURCE_IMAGE_PRESENT
 The push refers to repository [host.docker.internal:5001/cap/cap-web]
+268b405c1f00: Layer already exists
+9a37412b51ce: Layer already exists
 54c126d15664: Layer already exists
-38f14a62bdc9: Layer already exists
 77f36cabdad6: Layer already exists
 a088f1471ad9: Layer already exists
-5d197bc623c5: Layer already exists
-9a37412b51ce: Layer already exists
-268b405c1f00: Layer already exists
-5de55e5ef9c0: Layer already exists
-3cbf36db0a18: Layer already exists
 67e49a3832eb: Layer already exists
 6f93fb0c7078: Layer already exists
+3cbf36db0a18: Layer already exists
+38f14a62bdc9: Layer already exists
+5de55e5ef9c0: Layer already exists
+5d197bc623c5: Layer already exists
 b3054c2391f3: Layer already exists
 latest: digest: sha256:5b65d137f7f7ddd767e1acb37380a4609f43287458410515a013157b56cfa83d size: 2576
 
@@ -43,18 +43,18 @@ REGISTRY_MANIFEST_OK
 === ghcr.io/capsoftware/cap-media-server:latest -> host.docker.internal:5001/cap/cap-media-server:latest ===
 SOURCE_IMAGE_PRESENT
 The push refers to repository [host.docker.internal:5001/cap/cap-media-server]
+849ff117b1b6: Layer already exists
+018e5aeb5455: Layer already exists
+215d9cfe0702: Layer already exists
+aeb6370497d2: Layer already exists
+5b39c6cccbda: Layer already exists
+4300936ddc96: Layer already exists
+5660e03f193a: Layer already exists
+b265875bf0ba: Layer already exists
 cac8e46c0da1: Layer already exists
 3b55cc7edf0e: Layer already exists
 77e34267f227: Layer already exists
-aeb6370497d2: Layer already exists
-4300936ddc96: Layer already exists
-5b39c6cccbda: Layer already exists
 ffa31c0ebb97: Layer already exists
-5660e03f193a: Layer already exists
-018e5aeb5455: Layer already exists
-849ff117b1b6: Layer already exists
-b265875bf0ba: Layer already exists
-215d9cfe0702: Layer already exists
 latest: digest: sha256:98c0c73f5fa8939aba239f2c91d556f5f97177f3147c3f6aa548a0c3e848abca size: 2575
 
  Info -> Not all multiplatform-content is present and only the available single-platform image was pushed
@@ -74,17 +74,17 @@ REGISTRY_MANIFEST_OK
 === mysql:8.0 -> host.docker.internal:5001/cap/mysql:8.0 ===
 SOURCE_IMAGE_PRESENT
 The push refers to repository [host.docker.internal:5001/cap/mysql]
-42505e6e6b91: Layer already exists
 4fcb28d1dfcf: Layer already exists
-7ce425b17caf: Layer already exists
-7b9f24d93d52: Layer already exists
-605b7f42ac6e: Layer already exists
-1959e4a06a1c: Layer already exists
-fa30ab141b5a: Layer already exists
-e9b2852d2a9d: Layer already exists
 ad770837e789: Layer already exists
-70a53223cb4c: Layer already exists
+605b7f42ac6e: Layer already exists
+7ce425b17caf: Layer already exists
+e9b2852d2a9d: Layer already exists
+42505e6e6b91: Layer already exists
 11c0b299cb47: Layer already exists
+70a53223cb4c: Layer already exists
+7b9f24d93d52: Layer already exists
+fa30ab141b5a: Layer already exists
+1959e4a06a1c: Layer already exists
 8.0: digest: sha256:213bbfaf699693a40a20a12bb4342d2589a15a3dc7153db698eaed252a92458e size: 3047
 
  Info -> Not all multiplatform-content is present and only the available single-platform image was pushed
@@ -104,15 +104,15 @@ REGISTRY_MANIFEST_OK
 === quay.io/minio/minio:latest -> host.docker.internal:5001/cap/minio:latest ===
 SOURCE_IMAGE_PRESENT
 The push refers to repository [host.docker.internal:5001/cap/minio]
-4e6e13ec1e11: Layer already exists
-4ca31cd8344e: Layer already exists
-c75db12fb9c0: Layer already exists
+1e1cfd58aa02: Layer already exists
 7b79da5d3567: Layer already exists
-166b5f0a4239: Layer already exists
+4e6e13ec1e11: Layer already exists
+f06361c774fa: Layer already exists
 7c6ea1bdb2f6: Layer already exists
 2f0dae0f0359: Layer already exists
-f06361c774fa: Layer already exists
-1e1cfd58aa02: Layer already exists
+4ca31cd8344e: Layer already exists
+c75db12fb9c0: Layer already exists
+166b5f0a4239: Layer already exists
 latest: digest: sha256:9966a92a734f9411e32f4f41d7d9d826fcdc0f68c4e20b70295bd4e7c11f8a2f size: 2081
 
  Info -> Not all multiplatform-content is present and only the available single-platform image was pushed
@@ -132,12 +132,12 @@ REGISTRY_MANIFEST_OK
 === quay.io/minio/mc:latest -> host.docker.internal:5001/cap/minio-mc:latest ===
 SOURCE_IMAGE_PRESENT
 The push refers to repository [host.docker.internal:5001/cap/minio-mc]
-ecf8c1ada8f7: Layer already exists
-7a83c90b7412: Layer already exists
-c55e3179fbbb: Layer already exists
 09ba9cd49d15: Layer already exists
+ecf8c1ada8f7: Layer already exists
 4ca31cd8344e: Layer already exists
 9da136e89c8d: Layer already exists
+c55e3179fbbb: Layer already exists
+7a83c90b7412: Layer already exists
 latest: digest: sha256:37d109dddbbb2c95873f5fc81ac93f37023264770fc580a7564148892087b1b7 size: 1490
 
  Info -> Not all multiplatform-content is present and only the available single-platform image was pushed

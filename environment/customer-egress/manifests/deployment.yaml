@@ -48,6 +48,18 @@ spec:
 
               chmod 644 \
                 /home/mitmproxy/.mitmproxy/mitmproxy-ca-cert.pem
+
+              cat > /home/mitmproxy/.mitmproxy/config.yaml <<'EOF'
+              ssl_insecure: false
+              ssl_verify_upstream_trusted_ca: /upstream-ca/upstream-ca.crt
+              EOF
+
+              chmod 644 \
+                /home/mitmproxy/.mitmproxy/config.yaml
+
+              echo "MITMPROXY_CONFIG_CREATED"
+
+              cat /home/mitmproxy/.mitmproxy/config.yaml
           env:
             - name: HOME
               value: /home/mitmproxy
@@ -63,6 +75,9 @@ spec:
           volumeMounts:
             - name: customer-ca
               mountPath: /customer-ca
+              readOnly: true
+            - name: upstream-ca
+              mountPath: /upstream-ca
               readOnly: true
             - name: mitmproxy-confdir
               mountPath: /home/mitmproxy/.mitmproxy
@@ -80,10 +95,6 @@ spec:
             - regular@8080
             - --set
             - confdir=/home/mitmproxy/.mitmproxy
-            - --set
-            - ssl_insecure=false
-            - --set
-            - ssl_verify_upstream_trusted_ca=/upstream-ca/upstream-ca.crt
             - --scripts
             - /config/allowlist.py
           env:

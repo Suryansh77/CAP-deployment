@@ -1,0 +1,5 @@
+NAME                                READY   STATUS    RESTARTS   AGE
+cap-media-server-7bd67f67d6-4h8wb   1/1     Running   0          34m
+cap-minio-0                         1/1     Running   0          16h
+cap-mysql-0                         1/1     Running   0          16h
+cap-web-6bc694bfc9-sg9c2            1/1     Running   0          34m

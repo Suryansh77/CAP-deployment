@@ -16,3 +16,6 @@ environment/customer-egress/test-ca/*.key
 environment/customer-egress/test-ca/*.csr
 environment/customer-egress/test-ca/*.srl
 environment/customer-egress/test-ca/*.crt
+
+# Generated customer egress policy
+environment/customer-egress/generated/
