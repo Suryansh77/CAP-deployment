@@ -1,0 +1,20 @@
+=== POST-UNINSTALL INDEPENDENT LEFTOVER CHECK ===
+Mon Sep 14 21:03:16 IST 2026
+
+--- Target namespaces ---
+Error from server (NotFound): namespaces "cap" not found
+Error from server (NotFound): namespaces "customer-egress" not found
+
+--- Helm release ---
+NAME	NAMESPACE	REVISION	UPDATED	STATUS	CHART	APP VERSION
+
+--- Admission controls ---
+Error from server (NotFound): validatingadmissionpolicies.admissionregistration.k8s.io "cap-private-registry" not found
+Error from server (NotFound): validatingadmissionpolicybindings.admissionregistration.k8s.io "cap-private-registry" not found
+
+--- PersistentVolumes referencing deleted deployment ---
+
+--- Cluster resources with Cap naming ---
+
+--- Bootstrap registry ---
+/cap-registry running registry:2

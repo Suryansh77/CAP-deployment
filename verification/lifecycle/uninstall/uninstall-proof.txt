@@ -1,0 +1,101 @@
+=== UNINSTALL EXECUTION ===
+Command (run from ~/zamp-cap-assignment):
+./uninstall.sh
+
+Output:
+[uninstall] Starting uninstall at Mon Sep 14 20:59:17 IST 2026
+[uninstall] Cap namespace: cap
+[uninstall] Egress namespace: customer-egress
+[uninstall] Helm release: cap
+[uninstall] Removing Helm release
+release "cap" uninstalled
+[uninstall] Removing cluster-scoped admission controls
+[uninstall] Removing customer egress namespace
+namespace "customer-egress" deleted
+[uninstall] Removing Cap namespace
+namespace "cap" deleted
+[uninstall] Verifying no installation namespaces remain
+[uninstall] Verifying cluster-scoped admission controls are gone
+[uninstall] Verifying no Cap Helm release remains
+[uninstall] Verifying associated persistent volumes are gone
+[uninstall] Verifying bootstrap registry remains intact
+[uninstall] Preserved bootstrap registry: cap-registry (running)
+=== UNINSTALL COMPLETE ===
+Mon Sep 14 21:00:35 IST 2026
+
+--- Namespaces ---
+Error from server (NotFound): namespaces "cap" not found
+Error from server (NotFound): namespaces "customer-egress" not found
+
+--- Admission controls ---
+Error from server (NotFound): validatingadmissionpolicies.admissionregistration.k8s.io "cap-private-registry" not found
+Error from server (NotFound): validatingadmissionpolicybindings.admissionregistration.k8s.io "cap-private-registry" not found
+
+--- Helm release ---
+NAME    NAMESPACE       REVISION        UPDATED STATUS  CHART   APP VERSION
+
+--- Remaining Cap/Egress namespaces ---
+
+--- Bootstrap registry ---
+cap-registry                                                                                                            registry:2                      Up 19 hours
+
+RESULT=PASS
+
+UNINSTALL_COMPLETE
+
+
+=== INDEPENDENT POST-UNINSTALL LEFTOVER CHECK ===
+Command (run from ~/zamp-cap-assignment):
+kubectl get namespace cap customer-egress 2>&1 || true
+helm list -A --filter '^cap$'
+kubectl get validatingadmissionpolicy cap-private-registry 2>&1 || true
+kubectl get validatingadmissionpolicybinding cap-private-registry 2>&1 || true
+kubectl get pv -o custom-columns='PV:.metadata.name,CLAIM:.spec.claimRef.name,NAMESPACE:.spec.claimRef.namespace,STATUS:.status.phase' | grep -E 'cap-|minio|mysql' || true
+kubectl get clusterrole,clusterrolebinding,crd 2>/dev/null | grep -i cap || true
+docker inspect -f '{{.Name}} {{.State.Status}} {{.Config.Image}}' cap-registry
+
+Output:
+=== POST-UNINSTALL INDEPENDENT LEFTOVER CHECK ===
+Mon Sep 14 21:03:16 IST 2026
+
+--- Target namespaces ---
+Error from server (NotFound): namespaces "cap" not found
+Error from server (NotFound): namespaces "customer-egress" not found
+
+--- Helm release ---
+NAME    NAMESPACE       REVISION        UPDATED STATUS  CHART   APP VERSION
+
+--- Admission controls ---
+Error from server (NotFound): validatingadmissionpolicies.admissionregistration.k8s.io "cap-private-registry" not found
+Error from server (NotFound): validatingadmissionpolicybindings.admissionregistration.k8s.io "cap-private-registry" not found
+
+--- PersistentVolumes referencing deleted deployment ---
+
+--- Cluster resources with Cap naming ---
+
+--- Bootstrap registry ---
+/cap-registry running registry:2
+
+
+=== LOCAL REGISTRY / STORAGE CHECK ===
+Command (run from ~/zamp-cap-assignment):
+docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}' | grep -E 'cap-registry|cap-' || true
+docker volume ls | grep -E 'cap|registry' || true
+
+Output:
+=== LOCAL REGISTRY / STORAGE CHECK ===
+cap-registry                                                                                                            registry:2                      Up 19 hours
+
+
+=== INTERPRETATION ===
+- cap namespace: absent.
+- customer-egress namespace: absent.
+- cap Helm release: absent.
+- cap-private-registry ValidatingAdmissionPolicy: absent.
+- cap-private-registry ValidatingAdmissionPolicyBinding: absent.
+- No PersistentVolumes were returned by the targeted post-uninstall check.
+- No Cap-named ClusterRole, ClusterRoleBinding, or CRD was returned by the targeted check.
+- cap-registry remains running intentionally as local installer/bootstrap infrastructure.
+- No Cap application container remains; cap-registry is the only matching retained container.
+- No matching Docker volume was returned by the volume check.
+- The uninstall script reported RESULT=PASS and UNINSTALL_COMPLETE.
