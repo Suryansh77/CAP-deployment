@@ -369,6 +369,7 @@ kubectl apply -f "${ROOT_DIR}/policies/network-policy-minio-setup-ingress.yaml"
 kubectl apply -f "${ROOT_DIR}/policies/network-policy-mysql-ingress.yaml"
 kubectl apply -f "${ROOT_DIR}/policies/network-policy-web-to-proxy.yaml"
 kubectl apply -f "${ROOT_DIR}/policies/network-policy-media-to-proxy.yaml"
+kubectl apply -f "${ROOT_DIR}/policies/network-policy-ingress-to-web.yaml"
 
 echo "NETWORK_POLICY_APPLY_OK"
 
@@ -380,6 +381,8 @@ helm upgrade --install cap \
   --namespace cap \
   --create-namespace \
   -f "${ROOT_DIR}/secrets/local-values.yaml" \
+  --set ingress.host=localhost \
+  --set-string config.capUrl=http://localhost \
   --wait \
   --timeout 5m
 
@@ -512,6 +515,30 @@ if (( APP_STATUS < 200 || APP_STATUS >= 400 )); then
 fi
 
 echo "APPLICATION_HTTP_STATUS=${APP_STATUS}"
+
+echo
+echo "=== Ingress serving assertion ==="
+
+INGRESS_STATUS="$(
+  curl \
+    --silent \
+    --show-error \
+    --output /dev/null \
+    --write-out '%{http_code}' \
+    --connect-timeout 5 \
+    --max-time 10 \
+    -H 'Host: localhost' \
+    http://127.0.0.1/ \
+    | tee "${EVIDENCE_DIR}/application-ingress-status.txt"
+)"
+
+if [[ "${INGRESS_STATUS}" -lt 200 ||
+      "${INGRESS_STATUS}" -ge 400 ]]; then
+  echo "ERROR: Cap ingress returned unsuccessful HTTP status: ${INGRESS_STATUS}"
+  exit 1
+fi
+
+echo "APPLICATION_INGRESS_HTTP_STATUS=${INGRESS_STATUS}"
 echo "APPLICATION_SERVING_OK"
 
 echo

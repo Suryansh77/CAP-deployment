@@ -20,69 +20,11 @@ spec:
         app.kubernetes.io/component: egress-proxy
     spec:
       automountServiceAccountToken: false
-
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch
         seccompProfile:
           type: RuntimeDefault
-
-      initContainers:
-        - name: initialize-mitmproxy
-          image: host.docker.internal:5001/cap/mitmproxy@sha256:62d266a86ee95187217866c0e35487837498daa3aa1cdce37d256f07e198a47b
-          imagePullPolicy: IfNotPresent
-          command:
-            - /bin/sh
-            - -c
-            - |
-              set -eu
-
-              cp /customer-ca/mitmproxy-ca.pem \
-                /home/mitmproxy/.mitmproxy/mitmproxy-ca.pem
-
-              cp /customer-ca/mitmproxy-ca-cert.pem \
-                /home/mitmproxy/.mitmproxy/mitmproxy-ca-cert.pem
-
-              chmod 600 \
-                /home/mitmproxy/.mitmproxy/mitmproxy-ca.pem
-
-              chmod 644 \
-                /home/mitmproxy/.mitmproxy/mitmproxy-ca-cert.pem
-
-              cat > /home/mitmproxy/.mitmproxy/config.yaml <<'EOF'
-              ssl_insecure: false
-              ssl_verify_upstream_trusted_ca: /upstream-ca/upstream-ca.crt
-              EOF
-
-              chmod 644 \
-                /home/mitmproxy/.mitmproxy/config.yaml
-
-              echo "MITMPROXY_CONFIG_CREATED"
-
-              cat /home/mitmproxy/.mitmproxy/config.yaml
-          env:
-            - name: HOME
-              value: /home/mitmproxy
-          securityContext:
-            runAsUser: 1000
-            runAsGroup: 1000
-            runAsNonRoot: true
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            capabilities:
-              drop:
-                - ALL
-          volumeMounts:
-            - name: customer-ca
-              mountPath: /customer-ca
-              readOnly: true
-            - name: upstream-ca
-              mountPath: /upstream-ca
-              readOnly: true
-            - name: mitmproxy-confdir
-              mountPath: /home/mitmproxy/.mitmproxy
-            - name: tmp
-              mountPath: /tmp
 
       containers:
         - name: mitmproxy
@@ -95,6 +37,10 @@ spec:
             - regular@8080
             - --set
             - confdir=/home/mitmproxy/.mitmproxy
+            - --set
+            - ssl_insecure=false
+            - --set
+            - ssl_verify_upstream_trusted_ca=/upstream-ca/upstream-ca.crt
             - --scripts
             - /config/allowlist.py
           env:
@@ -145,6 +91,62 @@ spec:
             - name: upstream-ca
               mountPath: /upstream-ca
               readOnly: true
+            - name: tmp
+              mountPath: /tmp
+
+      initContainers:
+        - name: initialize-mitmproxy
+          image: host.docker.internal:5001/cap/mitmproxy@sha256:62d266a86ee95187217866c0e35487837498daa3aa1cdce37d256f07e198a47b
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+
+              cp /customer-ca/mitmproxy-ca.pem \
+                /home/mitmproxy/.mitmproxy/mitmproxy-ca.pem
+
+              cp /customer-ca/mitmproxy-ca-cert.pem \
+                /home/mitmproxy/.mitmproxy/mitmproxy-ca-cert.pem
+
+              chmod 600 \
+                /home/mitmproxy/.mitmproxy/mitmproxy-ca.pem
+
+              chmod 644 \
+                /home/mitmproxy/.mitmproxy/mitmproxy-ca-cert.pem
+
+              cat > /home/mitmproxy/.mitmproxy/config.yaml <<'EOF'
+              ssl_insecure: false
+              ssl_verify_upstream_trusted_ca: /upstream-ca/upstream-ca.crt
+              EOF
+
+              chmod 644 \
+                /home/mitmproxy/.mitmproxy/config.yaml
+
+              echo "MITMPROXY_CONFIG_CREATED"
+              cat /home/mitmproxy/.mitmproxy/config.yaml
+          env:
+            - name: HOME
+              value: /home/mitmproxy
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: customer-ca
+              mountPath: /customer-ca
+              readOnly: true
+            - name: upstream-ca
+              mountPath: /upstream-ca
+              readOnly: true
+            - name: mitmproxy-confdir
+              mountPath: /home/mitmproxy/.mitmproxy
             - name: tmp
               mountPath: /tmp
 

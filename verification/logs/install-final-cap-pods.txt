@@ -1,5 +1,5 @@
-NAME                                READY   STATUS    RESTARTS      AGE
-cap-media-server-5995468d89-lnw6t   1/1     Running   0             104s
-cap-minio-0                         1/1     Running   0             104s
-cap-mysql-0                         1/1     Running   0             104s
-cap-web-b75945d5d-4df4k             1/1     Running   1 (87s ago)   104s
+NAME                                READY   STATUS    RESTARTS       AGE
+cap-media-server-5995468d89-lnw6t   1/1     Running   0              166m
+cap-minio-0                         1/1     Running   0              166m
+cap-mysql-0                         1/1     Running   0              166m
+cap-web-b75945d5d-4df4k             1/1     Running   1 (166m ago)   166m

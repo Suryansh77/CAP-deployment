@@ -9,7 +9,7 @@ metadata:
   labels:
     app.kubernetes.io/managed-by: Helm
   name: cap-private-registry
-  resourceVersion: "30546"
+  resourceVersion: "33164"
   uid: 0b68a38c-1be1-42d9-82d9-d360281cf981
 spec:
   failurePolicy: Fail

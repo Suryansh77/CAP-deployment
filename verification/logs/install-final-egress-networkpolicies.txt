@@ -1,3 +1,3 @@
 NAME                            POD-SELECTOR                                   AGE
-customer-egress-proxy-egress    app.kubernetes.io/name=customer-egress-proxy   2m27s
-customer-egress-proxy-ingress   app.kubernetes.io/name=customer-egress-proxy   2m27s
+customer-egress-proxy-egress    app.kubernetes.io/name=customer-egress-proxy   167m
+customer-egress-proxy-ingress   app.kubernetes.io/name=customer-egress-proxy   167m
