@@ -1,0 +1,11 @@
+HTTP/1.1 200 Connection established
+TLS_AUTHORIZED=true
+PEER_CN=egress-test.customer-egress.svc.cluster.local
+ISSUER_CN=Zamp Customer Egress CA
+HTTP/1.0 200 OK
+Server: BaseHTTP/0.6 Python/3.14.5
+Date: Mon, 14 Sep 2026 18:41:14 GMT
+Content-Type: text/plain
+Content-Length: 28
+
+CUSTOMER_EGRESS_TLS_TEST_OK

@@ -1,0 +1,75 @@
+Defaulted container "mitmproxy" out of: mitmproxy, initialize-mitmproxy (init)
+[18:39:30.771] Loading script /config/allowlist.py
+[18:39:30.771] EGRESS_POLICY_LOADED entries=1 source=/config/allowlist.txt
+[18:39:30.772] HTTP(S) proxy listening at *:8080.
+[18:39:35.476][10.42.0.1:44674] client connect
+[18:39:35.478][10.42.0.1:44674] client disconnect
+[18:39:40.488][10.42.0.1:44682] client connect
+[18:39:40.489][10.42.0.1:44682] client disconnect
+[18:39:45.481][10.42.0.1:35390] client connect
+[18:39:45.483][10.42.0.1:35390] client disconnect
+[18:39:48.987][10.42.0.1:35398] client connect
+[18:39:48.988][10.42.0.1:35398] client disconnect
+[18:39:50.474][10.42.0.1:35406] client connect
+[18:39:50.475][10.42.0.1:35406] client disconnect
+[18:39:51.362][10.42.0.116:46942] client connect
+[18:39:51.373] EGRESS ALLOW CONNECT host=egress-test.customer-egress.svc.cluster.local port=8443
+[18:39:51.381][10.42.0.116:46942] server connect egress-test.customer-egress.svc.cluster.local:8443 (10.43.172.72:8443)
+[18:39:51.385][10.42.0.116:46942] client disconnect
+[18:39:51.386][10.42.0.116:46942] server disconnect egress-test.customer-egress.svc.cluster.local:8443 (10.43.172.72:8443)
+[18:39:55.474][10.42.0.1:51870] client connect
+[18:39:55.476][10.42.0.1:51870] client disconnect
+[18:39:58.988][10.42.0.1:51880] client connect
+[18:39:58.990][10.42.0.1:51880] client disconnect
+[18:40:00.478][10.42.0.1:51892] client connect
+[18:40:00.480][10.42.0.1:51892] client disconnect
+[18:40:05.474][10.42.0.1:45974] client connect
+[18:40:05.474][10.42.0.1:45974] client disconnect
+[18:40:08.989][10.42.0.1:45988] client connect
+[18:40:08.990][10.42.0.1:45988] client disconnect
+[18:40:10.475][10.42.0.1:46002] client connect
+[18:40:10.477][10.42.0.1:46002] client disconnect
+[18:40:15.473][10.42.0.1:38840] client connect
+[18:40:15.474][10.42.0.1:38840] client disconnect
+[18:40:18.991][10.42.0.1:38846] client connect
+[18:40:18.994][10.42.0.1:38846] client disconnect
+[18:40:20.475][10.42.0.1:38850] client connect
+[18:40:20.477][10.42.0.1:38850] client disconnect
+[18:40:25.477][10.42.0.1:35068] client connect
+[18:40:25.478][10.42.0.1:35068] client disconnect
+[18:40:28.987][10.42.0.1:35082] client connect
+[18:40:28.990][10.42.0.1:35082] client disconnect
+[18:40:30.477][10.42.0.1:35088] client connect
+[18:40:30.478][10.42.0.1:35088] client disconnect
+[18:40:35.475][10.42.0.1:49756] client connect
+[18:40:35.484][10.42.0.1:49756] client disconnect
+[18:40:38.986][10.42.0.1:49772] client connect
+[18:40:38.988][10.42.0.1:49772] client disconnect
+[18:40:40.478][10.42.0.1:49784] client connect
+[18:40:40.481][10.42.0.1:49784] client disconnect
+[18:40:45.475][10.42.0.1:51048] client connect
+[18:40:45.475][10.42.0.1:51048] client disconnect
+[18:40:48.987][10.42.0.1:51056] client connect
+[18:40:48.987][10.42.0.1:51056] client disconnect
+[18:40:50.477][10.42.0.1:51062] client connect
+[18:40:50.480][10.42.0.1:51062] client disconnect
+[18:40:55.474][10.42.0.1:55210] client connect
+[18:40:55.475][10.42.0.1:55210] client disconnect
+[18:40:58.993][10.42.0.1:55220] client connect
+[18:40:58.995][10.42.0.1:55220] client disconnect
+[18:41:00.477][10.42.0.1:55226] client connect
+[18:41:00.479][10.42.0.1:55226] client disconnect
+[18:41:05.473][10.42.0.1:54754] client connect
+[18:41:05.474][10.42.0.1:54754] client disconnect
+[18:41:08.989][10.42.0.1:54758] client connect
+[18:41:08.991][10.42.0.1:54758] client disconnect
+[18:41:10.477][10.42.0.1:54772] client connect
+[18:41:10.479][10.42.0.1:54772] client disconnect
+[18:41:14.628][10.42.0.116:48148] client connect
+[18:41:14.633] EGRESS ALLOW CONNECT host=egress-test.customer-egress.svc.cluster.local port=8443
+[18:41:14.640][10.42.0.116:48148] server connect egress-test.customer-egress.svc.cluster.local:8443 (10.43.172.72:8443)
+[18:41:14.672] EGRESS ALLOW host=egress-test.customer-egress.svc.cluster.local port=8443
+10.42.0.116:48148: GET https://egress-test.customer-egress.svc.cluster.local:8… HTTP/1.1
+       << HTTP/1.0 200 OK 28b
+[18:41:14.675][10.42.0.116:48148] server disconnect egress-test.customer-egress.svc.cluster.local:8443 (10.43.172.72:8443)
+[18:41:14.676][10.42.0.116:48148] client disconnect

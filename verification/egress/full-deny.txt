@@ -2,4 +2,3 @@ HTTP/1.1 403 Forbidden
 Content-Type: text/plain
 content-length: 34
 
-Blocked by customer egress policy
