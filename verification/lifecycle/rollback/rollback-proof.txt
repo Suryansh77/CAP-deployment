@@ -1,0 +1,157 @@
+=== DELIBERATE HALF-APPLIED ROLLBACK PROOF ===
+
+Timestamp:
+Tue Sep 15 01:28:49 IST 2026
+
+=== FAILED UPGRADE ===
+Revision 5 intentionally used an invalid MinIO digest and failed readiness.
+Invalid digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+=== HELM HISTORY ===
+REVISION	UPDATED                 	STATUS    	CHART    	APP VERSION	DESCRIPTION                                                                                                
+1       	Mon Sep 14 21:28:08 2026	superseded	cap-0.1.0	0.6.0      	Install complete                                                                                           
+2       	Mon Sep 14 23:42:12 2026	superseded	cap-0.1.0	0.6.0      	Upgrade complete                                                                                           
+3       	Tue Sep 15 00:13:30 2026	superseded	cap-0.1.0	0.6.0      	Upgrade complete                                                                                           
+4       	Tue Sep 15 00:38:02 2026	superseded	cap-0.1.0	0.6.0      	Upgrade complete                                                                                           
+5       	Tue Sep 15 01:15:35 2026	failed    	cap-0.1.0	0.6.0      	Upgrade "cap" failed: resource StatefulSet/cap/cap-minio not ready. status: InProgress, message: Ready: ...
+6       	Tue Sep 15 01:17:21 2026	failed    	cap-0.1.0	0.6.0      	Release "cap" failed: resource StatefulSet/cap/cap-minio not ready. status: InProgress, message: Ready: ...
+7       	Tue Sep 15 01:24:03 2026	deployed  	cap-0.1.0	0.6.0      	Rollback to 4                                                                                              
+
+=== CURRENT RELEASE ===
+NAME: cap
+LAST DEPLOYED: Tue Sep 15 01:24:03 2026
+NAMESPACE: cap
+STATUS: deployed
+REVISION: 7
+DESCRIPTION: Rollback to 4
+RESOURCES:
+==> v1/RoleBinding
+NAME           ROLE                AGE
+cap-deployer   Role/cap-deployer   4h
+
+==> v1/ValidatingAdmissionPolicy
+NAME                   VALIDATIONS   PARAMKIND   AGE
+cap-private-registry   1             <unset>     4h
+
+==> v1/ValidatingAdmissionPolicyBinding
+NAME                   POLICYNAME             PARAMREF   AGE
+cap-private-registry   cap-private-registry   <unset>    4h
+
+==> v1/ServiceAccount
+NAME           AGE
+cap-deployer   4h
+cap   4h
+
+==> v1/Secret
+NAME          TYPE     DATA   AGE
+cap-secrets   Opaque   10     4h
+
+==> v1/Role
+NAME           CREATED AT
+cap-deployer   2026-09-14T15:58:08Z
+
+==> v1/Service
+NAME               TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
+cap-media-server   ClusterIP   10.43.70.210   <none>        3456/TCP   4h
+cap-minio   ClusterIP   10.43.48.240   <none>   9000/TCP   4h
+cap-mysql   ClusterIP   None   <none>   3306/TCP   4h
+cap-web   ClusterIP   10.43.185.190   <none>   3000/TCP   4h
+
+==> v1/Deployment
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+cap-media-server   1/1     1            1           4h
+cap-web   1/1   1     1     4h
+
+==> v1/Pod(related)
+NAME                                READY   STATUS    RESTARTS   AGE
+cap-media-server-5995468d89-lnw6t   1/1     Running   0          4h
+cap-web-b75945d5d-4df4k   1/1   Running   1 (4h ago)   4h
+cap-minio-0   1/1   Running   0     4m33s
+cap-mysql-0   1/1   Running   0     4h
+
+==> v1/StatefulSet
+NAME        READY   AGE
+cap-minio   1/1     4h
+cap-mysql   1/1   4h
+
+==> v1/Ingress
+NAME   CLASS     HOSTS       ADDRESS        PORTS   AGE
+cap    traefik   localhost   192.168.64.2   80      4h
+
+==> v1/ConfigMap
+NAME         DATA   AGE
+cap-config   10     4h
+
+
+TEST SUITE: None
+
+=== CURRENT MINIO IMAGE ===
+host.docker.internal:5001/cap/minio@sha256:9966a92a734f9411e32f4f41d7d9d826fcdc0f68c4e20b70295bd4e7c11f8a2f
+
+=== FINAL WORKLOAD HEALTH ===
+NAME                                READY   STATUS    RESTARTS     AGE
+cap-media-server-5995468d89-lnw6t   1/1     Running   0            4h
+cap-minio-0                         1/1     Running   0            4m33s
+cap-mysql-0                         1/1     Running   0            4h
+cap-web-b75945d5d-4df4k             1/1     Running   1 (4h ago)   4h
+
+=== ROLLBACK RESULT ===
+helm rollback cap 4 -n cap --no-hooks succeeded and created revision 7.
+The failed MinIO pod required deletion after the rollback because the replacement pod had not yet become Ready.
+The replacement pod subsequently reached Ready and the release returned to STATUS: deployed.
+
+=== ADDITIONAL HALF-APPLIED STATE EVIDENCE ===
+
+=== FAILED REVISION 5 VALUES ===
+  s3:
+    bucket: cap
+    internalEndpoint: http://minio:9000
+    pathStyle: true
+    publicEndpoint: http://minio:9000
+    region: us-east-1
+fullnameOverride: ""
+images:
+  mediaServer:
+--
+    repository: host.docker.internal:5001/cap/cap-media-server
+    tag: latest
+  minio:
+    digest: sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    pullPolicy: IfNotPresent
+    repository: host.docker.internal:5001/cap/minio
+    tag: latest
+--
+  service:
+    port: 3456
+minio:
+  persistence:
+    size: 20Gi
+    storageClass: ""
+  service:
+
+=== CURRENT GOOD IMAGE ===
+host.docker.internal:5001/cap/minio@sha256:9966a92a734f9411e32f4f41d7d9d826fcdc0f68c4e20b70295bd4e7c11f8a2f
+
+=== MINIO FAILURE AND RECOVERY EVENTS ===
+53m         Normal    Scheduled              pod/cap-minio-setup-b6cmq          Successfully assigned cap/cap-minio-setup-b6cmq to lima-rancher-desktop
+16m         Normal    Scheduled              pod/cap-minio-0                    Successfully assigned cap/cap-minio-0 to lima-rancher-desktop
+7m23s       Normal    Scheduled              pod/cap-minio-0                    Successfully assigned cap/cap-minio-0 to lima-rancher-desktop
+53m         Normal    SuccessfulCreate       job/cap-minio-setup                Created pod: cap-minio-setup-b6cmq
+53m         Normal    Pulled                 pod/cap-minio-setup-b6cmq          Container image "host.docker.internal:5001/cap/minio-mc@sha256:37d109dddbbb2c95873f5fc81ac93f37023264770fc580a7564148892087b1b7" already present on machine and can be accessed by the pod
+53m         Normal    Created                pod/cap-minio-setup-b6cmq          Container created
+53m         Normal    Started                pod/cap-minio-setup-b6cmq          Container started
+53m         Normal    Completed              job/cap-minio-setup                Job completed
+16m         Normal    SuccessfulDelete       statefulset/cap-minio              Delete Pod cap-minio-0 in StatefulSet cap-minio successful
+16m         Normal    Killing                pod/cap-minio-0                    Stopping container minio
+13m         Warning   Failed                 pod/cap-minio-0                    Error: ErrImagePull
+13m         Warning   Failed                 pod/cap-minio-0                    Failed to pull image "host.docker.internal:5001/cap/minio@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": Error response from daemon: failed to resolve reference "host.docker.internal:5001/cap/minio@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": host.docker.internal:5001/cap/minio@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa: not found
+13m         Normal    Pulling                pod/cap-minio-0                    Pulling image "host.docker.internal:5001/cap/minio@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+11m         Warning   Failed                 pod/cap-minio-0                    Error: ImagePullBackOff
+11m         Normal    BackOff                pod/cap-minio-0                    Back-off pulling image "host.docker.internal:5001/cap/minio@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+7m24s       Normal    SuccessfulCreate       statefulset/cap-minio              Create Pod cap-minio-0 in StatefulSet cap-minio successful
+7m23s       Normal    Started                pod/cap-minio-0                    Container started
+7m23s       Normal    Created                pod/cap-minio-0                    Container created
+7m23s       Normal    Pulled                 pod/cap-minio-0                    Container image "host.docker.internal:5001/cap/minio@sha256:9966a92a734f9411e32f4f41d7d9d826fcdc0f68c4e20b70295bd4e7c11f8a2f" already present on machine and can be accessed by the pod
+
+=== APPLICATION SERVING AFTER ROLLBACK ===
+HTTP 200
