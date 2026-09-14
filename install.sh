@@ -97,6 +97,14 @@ GENERATED_DIR="${ROOT_DIR}/environment/customer-egress/generated"
 
 mkdir -p "${EVIDENCE_DIR}" "${EGRESS_EVIDENCE_DIR}" "${GENERATED_DIR}"
 
+cleanup_generated_values() {
+  if [[ -n "${GENERATED_VALUES_FILE}" ]]; then
+    rm -f "${GENERATED_VALUES_FILE}"
+  fi
+}
+
+trap cleanup_generated_values EXIT
+
 echo
 echo "=== Local registry ==="
 
@@ -108,22 +116,61 @@ if [[ ! -f "${REGISTRY_CA}" ]]; then
   exit 1
 fi
 
+REGISTRY_EXISTS=false
+
 if docker ps -a \
   --filter "name=^cap-registry$" \
   --format '{{.Names}}' |
   grep -qx 'cap-registry'; then
+  REGISTRY_EXISTS=true
+fi
+
+if [[ "${REGISTRY_EXISTS}" == true ]]; then
+  echo "REGISTRY_CONTAINER_EXISTS"
+
+  REGISTRY_WORKING=false
 
   if docker ps \
     --filter "name=^cap-registry$" \
     --format '{{.Names}}' |
     grep -qx 'cap-registry'; then
 
-    echo "REGISTRY_CONTAINER_RUNNING"
+    if curl \
+      --cacert "${REGISTRY_CA}" \
+      --resolve "${REGISTRY}:${REGISTRY_VERIFY_IP}" \
+      -fsS \
+      "${REGISTRY_URL}/v2/" >/dev/null 2>&1; then
 
-  else
-    echo "Starting existing HTTPS registry..."
-    docker start cap-registry >/dev/null
-    echo "REGISTRY_CONTAINER_STARTED"
+      REGISTRY_WORKING=true
+      echo "REGISTRY_CONTAINER_RUNNING_WITH_CURRENT_CERT"
+
+    else
+      echo "REGISTRY_CERT_OR_ENDPOINT_MISMATCH"
+    fi
+  fi
+
+  if [[ "${REGISTRY_WORKING}" != true ]]; then
+    echo "Recreating HTTPS registry container with current certificates..."
+
+    docker rm -f cap-registry >/dev/null 2>&1 || true
+
+    if ! docker image inspect registry:2 >/dev/null 2>&1; then
+      echo "ERROR: required bootstrap image 'registry:2' is not available locally."
+      echo "Preload registry:2 before running the constrained installer."
+      exit 1
+    fi
+
+    docker run -d \
+      --name cap-registry \
+      -p "${REGISTRY_PORT}:5000" \
+      -v "${REGISTRY_CERT_DIR}:/certs:ro" \
+      -v cap-registry-data:/var/lib/registry \
+      -e REGISTRY_HTTP_ADDR=0.0.0.0:5000 \
+      -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/registry.crt \
+      -e REGISTRY_HTTP_TLS_KEY=/certs/registry.key \
+      registry:2 >/dev/null
+
+    echo "REGISTRY_CONTAINER_RECREATED"
   fi
 
 else
@@ -168,6 +215,7 @@ done
 
 if [[ "${registry_ready}" != true ]]; then
   echo "ERROR: HTTPS registry did not become ready."
+  docker logs cap-registry --tail=100 || true
   exit 1
 fi
 
@@ -195,14 +243,6 @@ echo "=== Helm render validation ==="
 
 RENDER_FILE="$(mktemp)"
 
-cleanup_generated_values() {
-  if [[ -n "${GENERATED_VALUES_FILE}" ]]; then
-    rm -f "${GENERATED_VALUES_FILE}"
-  fi
-}
-
-trap cleanup_generated_values EXIT
-
 helm template cap \
   "${ROOT_DIR}/helm/cap" \
   --namespace cap \
@@ -225,6 +265,7 @@ IMAGE_COUNT="$(
 
 if [[ "${IMAGE_COUNT}" -eq 0 ]]; then
   echo "ERROR: no container images found in rendered workload."
+  rm -f "${RENDER_FILE}"
   exit 1
 fi
 
@@ -238,6 +279,7 @@ if [[ "${IMAGE_COUNT}" -ne "${PINNED_COUNT}" ]]; then
   echo "IMAGE_COUNT=${IMAGE_COUNT}"
   echo "PINNED_COUNT=${PINNED_COUNT}"
   printf '%s\n' "${RENDERED_IMAGES}"
+  rm -f "${RENDER_FILE}"
   exit 1
 fi
 
@@ -249,6 +291,7 @@ NON_PRIVATE_IMAGES="$(
 if [[ -n "${NON_PRIVATE_IMAGES}" ]]; then
   echo "ERROR: rendered workload contains an image outside the private registry:"
   echo "${NON_PRIVATE_IMAGES}"
+  rm -f "${RENDER_FILE}"
   exit 1
 fi
 
