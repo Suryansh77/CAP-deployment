@@ -1,0 +1,65 @@
+apiVersion: v1
+items:
+- apiVersion: networking.k8s.io/v1
+  kind: NetworkPolicy
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"networking.k8s.io/v1","kind":"NetworkPolicy","metadata":{"annotations":{},"name":"customer-egress-proxy-egress","namespace":"customer-egress"},"spec":{"egress":[{"ports":[{"port":53,"protocol":"UDP"},{"port":53,"protocol":"TCP"}]},{"ports":[{"port":8443,"protocol":"TCP"}],"to":[{"podSelector":{"matchLabels":{"app.kubernetes.io/name":"customer-egress-upstream-test"}}}]}],"podSelector":{"matchLabels":{"app.kubernetes.io/name":"customer-egress-proxy"}},"policyTypes":["Egress"]}}
+    creationTimestamp: "2026-09-14T11:11:14Z"
+    generation: 2
+    name: customer-egress-proxy-egress
+    namespace: customer-egress
+    resourceVersion: "22432"
+    uid: 87ac50ec-6a30-44ae-9824-0ed419364c3d
+  spec:
+    egress:
+    - ports:
+      - port: 53
+        protocol: UDP
+      - port: 53
+        protocol: TCP
+    - ports:
+      - port: 8443
+        protocol: TCP
+      to:
+      - podSelector:
+          matchLabels:
+            app.kubernetes.io/name: customer-egress-upstream-test
+    podSelector:
+      matchLabels:
+        app.kubernetes.io/name: customer-egress-proxy
+    policyTypes:
+    - Egress
+- apiVersion: networking.k8s.io/v1
+  kind: NetworkPolicy
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"networking.k8s.io/v1","kind":"NetworkPolicy","metadata":{"annotations":{},"name":"customer-egress-proxy-ingress","namespace":"customer-egress"},"spec":{"ingress":[{"from":[{"namespaceSelector":{"matchLabels":{"kubernetes.io/metadata.name":"cap"}},"podSelector":{"matchLabels":{"app.kubernetes.io/name":"cap"}}}],"ports":[{"port":8080,"protocol":"TCP"}]}],"podSelector":{"matchLabels":{"app.kubernetes.io/name":"customer-egress-proxy"}},"policyTypes":["Ingress"]}}
+    creationTimestamp: "2026-09-14T11:11:14Z"
+    generation: 1
+    name: customer-egress-proxy-ingress
+    namespace: customer-egress
+    resourceVersion: "21133"
+    uid: 61b20ed5-ce90-493a-9e18-96903a454fcf
+  spec:
+    ingress:
+    - from:
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: cap
+        podSelector:
+          matchLabels:
+            app.kubernetes.io/name: cap
+      ports:
+      - port: 8080
+        protocol: TCP
+    podSelector:
+      matchLabels:
+        app.kubernetes.io/name: customer-egress-proxy
+    policyTypes:
+    - Ingress
+kind: List
+metadata:
+  resourceVersion: ""

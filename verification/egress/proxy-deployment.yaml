@@ -1,0 +1,195 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "4"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app.kubernetes.io/component":"egress-proxy","app.kubernetes.io/name":"customer-egress-proxy"},"name":"customer-egress-proxy","namespace":"customer-egress"},"spec":{"replicas":1,"selector":{"matchLabels":{"app.kubernetes.io/name":"customer-egress-proxy"}},"strategy":{"type":"Recreate"},"template":{"metadata":{"labels":{"app.kubernetes.io/component":"egress-proxy","app.kubernetes.io/name":"customer-egress-proxy"}},"spec":{"automountServiceAccountToken":false,"containers":[{"args":["--mode","regular@8080","--set","confdir=/home/mitmproxy/.mitmproxy","--set","ssl_insecure=false","--set","ssl_verify_upstream_trusted_ca=/upstream-ca/upstream-ca.crt","--scripts","/config/allowlist.py"],"command":["mitmdump"],"env":[{"name":"HOME","value":"/home/mitmproxy"},{"name":"PYTHONUNBUFFERED","value":"1"}],"image":"host.docker.internal:5001/cap/mitmproxy@sha256:62d266a86ee95187217866c0e35487837498daa3aa1cdce37d256f07e198a47b","imagePullPolicy":"IfNotPresent","livenessProbe":{"failureThreshold":3,"initialDelaySeconds":10,"periodSeconds":10,"tcpSocket":{"port":"proxy"},"timeoutSeconds":2},"name":"mitmproxy","ports":[{"containerPort":8080,"name":"proxy","protocol":"TCP"}],"readinessProbe":{"failureThreshold":6,"initialDelaySeconds":3,"periodSeconds":5,"tcpSocket":{"port":"proxy"},"timeoutSeconds":2},"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"100m","memory":"128Mi"}},"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000},"volumeMounts":[{"mountPath":"/home/mitmproxy/.mitmproxy","name":"mitmproxy-confdir"},{"mountPath":"/config","name":"proxy-config","readOnly":true},{"mountPath":"/upstream-ca","name":"upstream-ca","readOnly":true},{"mountPath":"/tmp","name":"tmp"}]}],"initContainers":[{"command":["/bin/sh","-c","set -eu\n\ncp /customer-ca/mitmproxy-ca.pem \\\n  /home/mitmproxy/.mitmproxy/mitmproxy-ca.pem\n\ncp /customer-ca/mitmproxy-ca-cert.pem \\\n  /home/mitmproxy/.mitmproxy/mitmproxy-ca-cert.pem\n\nchmod 600 \\\n  /home/mitmproxy/.mitmproxy/mitmproxy-ca.pem\n\nchmod 644 \\\n  /home/mitmproxy/.mitmproxy/mitmproxy-ca-cert.pem\n"],"env":[{"name":"HOME","value":"/home/mitmproxy"}],"image":"host.docker.internal:5001/cap/mitmproxy@sha256:62d266a86ee95187217866c0e35487837498daa3aa1cdce37d256f07e198a47b","imagePullPolicy":"IfNotPresent","name":"initialize-mitmproxy","securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"readOnlyRootFilesystem":true,"runAsGroup":1000,"runAsNonRoot":true,"runAsUser":1000},"volumeMounts":[{"mountPath":"/customer-ca","name":"customer-ca","readOnly":true},{"mountPath":"/home/mitmproxy/.mitmproxy","name":"mitmproxy-confdir"},{"mountPath":"/tmp","name":"tmp"}]}],"securityContext":{"fsGroup":1000,"fsGroupChangePolicy":"OnRootMismatch","seccompProfile":{"type":"RuntimeDefault"}},"volumes":[{"name":"customer-ca","secret":{"defaultMode":292,"secretName":"customer-egress-ca"}},{"name":"upstream-ca","secret":{"defaultMode":292,"secretName":"customer-egress-upstream-ca"}},{"configMap":{"name":"customer-egress-proxy-config"},"name":"proxy-config"},{"emptyDir":{},"name":"mitmproxy-confdir"},{"emptyDir":{},"name":"tmp"}]}}}}
+  creationTimestamp: "2026-09-14T11:05:09Z"
+  generation: 4
+  labels:
+    app.kubernetes.io/component: egress-proxy
+    app.kubernetes.io/name: customer-egress-proxy
+  name: customer-egress-proxy
+  namespace: customer-egress
+  resourceVersion: "22871"
+  uid: 95b3f91b-9905-4729-b052-e8dda30f32e6
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: customer-egress-proxy
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/restartedAt: "2026-09-14T17:31:07+05:30"
+      labels:
+        app.kubernetes.io/component: egress-proxy
+        app.kubernetes.io/name: customer-egress-proxy
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - args:
+        - --mode
+        - regular@8080
+        - --set
+        - confdir=/home/mitmproxy/.mitmproxy
+        - --set
+        - ssl_insecure=false
+        - --set
+        - ssl_verify_upstream_trusted_ca=/upstream-ca/upstream-ca.crt
+        - --scripts
+        - /config/allowlist.py
+        command:
+        - mitmdump
+        env:
+        - name: HOME
+          value: /home/mitmproxy
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        image: host.docker.internal:5001/cap/mitmproxy@sha256:62d266a86ee95187217866c0e35487837498daa3aa1cdce37d256f07e198a47b
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          tcpSocket:
+            port: proxy
+          timeoutSeconds: 2
+        name: mitmproxy
+        ports:
+        - containerPort: 8080
+          name: proxy
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 6
+          initialDelaySeconds: 3
+          periodSeconds: 5
+          successThreshold: 1
+          tcpSocket:
+            port: proxy
+          timeoutSeconds: 2
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /home/mitmproxy/.mitmproxy
+          name: mitmproxy-confdir
+        - mountPath: /config
+          name: proxy-config
+          readOnly: true
+        - mountPath: /upstream-ca
+          name: upstream-ca
+          readOnly: true
+        - mountPath: /tmp
+          name: tmp
+      dnsPolicy: ClusterFirst
+      initContainers:
+      - command:
+        - /bin/sh
+        - -c
+        - |
+          set -eu
+
+          cp /customer-ca/mitmproxy-ca.pem \
+            /home/mitmproxy/.mitmproxy/mitmproxy-ca.pem
+
+          cp /customer-ca/mitmproxy-ca-cert.pem \
+            /home/mitmproxy/.mitmproxy/mitmproxy-ca-cert.pem
+
+          chmod 600 \
+            /home/mitmproxy/.mitmproxy/mitmproxy-ca.pem
+
+          chmod 644 \
+            /home/mitmproxy/.mitmproxy/mitmproxy-ca-cert.pem
+        env:
+        - name: HOME
+          value: /home/mitmproxy
+        image: host.docker.internal:5001/cap/mitmproxy@sha256:62d266a86ee95187217866c0e35487837498daa3aa1cdce37d256f07e198a47b
+        imagePullPolicy: IfNotPresent
+        name: initialize-mitmproxy
+        resources: {}
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsGroup: 1000
+          runAsNonRoot: true
+          runAsUser: 1000
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /customer-ca
+          name: customer-ca
+          readOnly: true
+        - mountPath: /home/mitmproxy/.mitmproxy
+          name: mitmproxy-confdir
+        - mountPath: /tmp
+          name: tmp
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: customer-ca
+        secret:
+          defaultMode: 292
+          secretName: customer-egress-ca
+      - name: upstream-ca
+        secret:
+          defaultMode: 292
+          secretName: customer-egress-upstream-ca
+      - configMap:
+          defaultMode: 420
+          name: customer-egress-proxy-config
+        name: proxy-config
+      - emptyDir: {}
+        name: mitmproxy-confdir
+      - emptyDir: {}
+        name: tmp
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2026-09-14T12:01:15Z"
+    lastUpdateTime: "2026-09-14T12:01:15Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2026-09-14T11:05:09Z"
+    lastUpdateTime: "2026-09-14T12:01:15Z"
+    message: ReplicaSet "customer-egress-proxy-58f996bc74" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 4
+  readyReplicas: 1
+  replicas: 1
+  terminatingReplicas: 0
+  updatedReplicas: 1

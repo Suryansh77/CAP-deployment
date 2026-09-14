@@ -1,0 +1,2 @@
+[12:20:12.308] EGRESS DENY CONNECT host=example.com port=443
+[12:21:54.582] EGRESS DENY CONNECT host=example.com port=443

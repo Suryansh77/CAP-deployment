@@ -1,0 +1,26 @@
+TLS interception verification
+
+Client:
+  cap-web deployment
+
+Proxy:
+  customer-egress-proxy.customer-egress.svc.cluster.local:8080
+
+Destination:
+  egress-test.customer-egress.svc.cluster.local:8443
+
+Observed:
+  PROXY_RESPONSE= HTTP/1.1 200 Connection established
+  TLS_AUTHORIZED= true
+  CERT_SUBJECT= {"CN":"egress-test.customer-egress.svc.cluster.local","O":"Zamp Test Environment"}
+  CERT_ISSUER= {"O":"Zamp Customer","OU":"Egress Security","CN":"Zamp Customer Egress CA"}
+  CERT_ALT_NAMES= DNS:egress-test.customer-egress.svc.cluster.local, DNS:egress-test
+
+Upstream response:
+  HTTP/1.0 200 OK
+  CUSTOMER_EGRESS_TLS_TEST_OK
+
+Conclusion:
+  The client successfully established TLS through the customer egress
+  proxy, trusted the proxy-issued certificate using the customer CA,
+  and received the controlled upstream HTTPS response.
