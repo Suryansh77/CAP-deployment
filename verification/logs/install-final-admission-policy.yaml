@@ -4,13 +4,13 @@ metadata:
   annotations:
     meta.helm.sh/release-name: cap
     meta.helm.sh/release-namespace: cap
-  creationTimestamp: "2026-09-14T09:22:49Z"
-  generation: 2
+  creationTimestamp: "2026-09-14T15:58:08Z"
+  generation: 1
   labels:
     app.kubernetes.io/managed-by: Helm
   name: cap-private-registry
-  resourceVersion: "21418"
-  uid: d1e7c1df-75a3-4ce3-a412-ebd2f0a38bbb
+  resourceVersion: "30546"
+  uid: 0b68a38c-1be1-42d9-82d9-d360281cf981
 spec:
   failurePolicy: Fail
   matchConstraints:
@@ -60,4 +60,5 @@ spec:
       must come from the approved private registry.
     reason: Forbidden
 status:
-  observedGeneration: 2
+  observedGeneration: 1
+  typeChecking: {}
