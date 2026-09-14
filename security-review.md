@@ -647,9 +647,136 @@ The FDE deployment does not require cluster-admin privileges.
 The deployment is intentionally designed to work within the namespace and
 permissions granted to the FDE deployment identity.
 
+## 13. Customer Egress Proxy
+
+### Security model
+
+Outbound access is separated into two controls:
+
+1. Cap Web and Media Server may reach the customer egress proxy on TCP/8080.
+2. Direct external traffic from the Cap namespace is blocked by default-deny NetworkPolicy.
+
+The proxy then applies an explicit L7 destination allowlist.
+
+The proxy and its supporting resources are deployed in the separate:
+
+    customer-egress
+
+namespace.
+
+The Cap Helm chart remains environment-neutral. Proxy endpoint and customer-CA settings are supplied through Helm values.
+
+### TLS interception
+
+The customer egress proxy terminates client TLS and presents a destination certificate signed by the customer-style egress CA.
+
+The real `cap-web` workload was used as the verification client.
+
+Observed:
+
+    PROXY_RESPONSE= HTTP/1.1 200 Connection established
+    TLS_AUTHORIZED= true
+
+The intercepted certificate was issued by:
+
+    O=Zamp Customer
+    OU=Egress Security
+    CN=Zamp Customer Egress CA
+
+The certificate SAN matched:
+
+    DNS:egress-test.customer-egress.svc.cluster.local
+    DNS:egress-test
+
+The controlled HTTPS endpoint returned:
+
+    HTTP/1.0 200 OK
+    CUSTOMER_EGRESS_TLS_TEST_OK
+
+Upstream TLS verification remained enabled. No insecure certificate bypass was used.
+
+### Unallowlisted destination
+
+A direct CONNECT request from the real `cap-web` workload to:
+
+    example.com:443
+
+through the customer egress proxy returned:
+
+    HTTP/1.1 403 Forbidden
+
+The proxy recorded:
+
+    EGRESS DENY CONNECT host=example.com port=443
+
+This demonstrates L7 deny enforcement for a destination outside the allowlist.
+
+### Direct bypass test
+
+All HTTP and HTTPS proxy environment variables were removed from the `cap-web` process.
+
+The same workload then attempted:
+
+    https://example.com
+
+The connection failed with:
+
+    wget: can't connect to remote host (172.66.147.243:443): Connection refused
+
+This demonstrates that the proxy is not merely a convention. Direct Internet access is independently blocked by NetworkPolicy.
+
+### Evidence
+
+The current proxy evidence is archived under:
+
+    verification/egress/
+
+including:
+
+- `tls-interception-result.txt`
+- `proxy-tls-interception.log`
+- `proxy-deny-example-com.txt`
+- `proxy-deny-log.txt`
+- `direct-bypass.txt`
+- `proxy-deployment.yaml`
+- `proxy-networkpolicies.yaml`
+
+### Verification-only endpoint
+
+The controlled HTTPS endpoint used for TLS-interception validation is classified as:
+
+    phase: verification
+
+It is not a required runtime dependency of the baseline self-hosted Cap deployment.
+
+The permanent runtime allowlist must contain only destinations justified by observed application behavior or an explicit customer requirement.
+
 ---
 
-## 13. Current Security Status
+## 14. Egress Allowlist Review
+
+The baseline self-hosted deployment uses internal MinIO and does not currently require external runtime egress.
+
+Previously investigated external paths include:
+
+- public AWS S3
+- Tinybird
+- cap.so / Vercel
+- Sentry / OpenTelemetry
+
+These remain blocked or disabled in the baseline unless a specific deployment requirement establishes a need.
+
+The repository policy source is:
+
+    policies/egress-allowlist.yaml
+
+The intended model is that the policy file is the source of truth and the enforced proxy configuration is generated from it.
+
+The verification-only endpoint must not be promoted into the permanent production allowlist.
+
+---
+
+## 15. Current Security Status
 
 ### Completed and verified
 
@@ -671,12 +798,15 @@ permissions granted to the FDE deployment identity.
 - Public image rejection.
 - Private image acceptance.
 - Public init-container bypass rejection.
+- Customer egress proxy deployment.
+- Customer CA trust in Cap Web and Media Server.
+- Positive TLS-interception verification from the real Cap Web workload.
+- Proxy denial of an unallowlisted destination.
+- Direct Internet bypass blocked by NetworkPolicy.
 
 ### Required before final submission
 
-- Complete proxy implementation.
-- TLS interception validation.
-- Final explicit egress allowlist.
+- Policy-driven generation of the runtime proxy allowlist.
 - Clean-install proxy denial log.
 - Full-deny proxy air-gap test after installation.
 - No-egress runner proof.

@@ -999,3 +999,206 @@ The expression-warning field returned no warnings.
 Complete for the current local target.
 
 ---
+
+---
+
+## 23. Customer Egress Proxy Architecture
+
+### Decision
+
+Implement customer-style outbound egress as infrastructure outside the Cap Helm workload.
+
+### Chosen
+
+- A dedicated `customer-egress` namespace hosts the egress proxy.
+- Cap Web and Media Server receive HTTP/HTTPS proxy environment variables through Helm values.
+- The Cap namespace uses NetworkPolicy to permit application traffic to the proxy on TCP/8080.
+- Direct external traffic from Cap remains blocked by the namespace default-deny egress policy.
+- The proxy enforces an explicit L7 destination allowlist.
+- TLS interception is enabled at the proxy and client workloads trust the customer egress CA.
+- The Cap Helm chart remains environment-neutral; proxy endpoints and CA configuration are supplied as environment values.
+
+### Rejected
+
+Using the host machine's corporate proxy or Cisco Secure Access CA as part of the deployment architecture.
+
+### Reason
+
+The host's outbound interception is environment-specific and is not representative of a customer-controlled deployment. The customer requirement is a customer-owned proxy and customer CA, so the implementation must reproduce that boundary independently.
+
+### Security model
+
+The proxy is not treated as the sole security boundary.
+
+NetworkPolicy prevents Cap workloads from bypassing the proxy for direct Internet access, while the proxy allowlist controls which destinations may be reached through the permitted egress path.
+
+---
+
+## 24. Customer Egress TLS Interception
+
+### Decision
+
+Use a customer-style CA generated for the local verification environment and require client-side certificate validation.
+
+### Chosen
+
+The Cap Web workload trusts:
+
+`Zamp Customer Egress CA`
+
+The proxy terminates client TLS and generates a destination certificate signed by that CA. Upstream TLS verification remains enabled.
+
+### Problem encountered
+
+The first verification upstream CA was X.509 Version 1 and did not contain the CA extensions required by the container's Python/OpenSSL validation path.
+
+### Resolution
+
+The verification PKI generation was replaced with X.509 v3 CA and server certificates including:
+
+- critical CA/basic constraints
+- key usage
+- subject key identifier
+- authority key identifier
+- server extended key usage
+- subject alternative names
+
+The corrected upstream certificate successfully validates in the proxy container.
+
+### Evidence
+
+The corrected direct upstream verification returned:
+
+`STATUS= 200`
+
+`CUSTOMER_EGRESS_TLS_TEST_OK`
+
+---
+
+## 25. Customer Egress Enforcement Verification
+
+### Positive verification
+
+The real `cap-web` workload successfully connected through the customer egress proxy to the controlled HTTPS verification endpoint.
+
+Observed:
+
+- `HTTP/1.1 200 Connection established`
+- `TLS_AUTHORIZED=true`
+- certificate issuer:
+  `O=Zamp Customer, OU=Egress Security, CN=Zamp Customer Egress CA`
+- upstream response:
+  `CUSTOMER_EGRESS_TLS_TEST_OK`
+
+This proves the client trusted a proxy-issued certificate rather than bypassing TLS interception.
+
+### Negative verification
+
+An unallowlisted external destination, `example.com:443`, was rejected by the proxy with:
+
+`HTTP/1.1 403 Forbidden`
+
+The proxy recorded:
+
+`EGRESS DENY CONNECT host=example.com port=443`
+
+A second test removed all HTTP/HTTPS proxy environment variables from the Cap Web process. Direct access to `example.com:443` failed with connection refused.
+
+### Conclusion
+
+Both enforcement layers are independently demonstrated:
+
+1. The proxy blocks destinations outside the explicit allowlist.
+2. Cap workloads cannot bypass the proxy through direct Internet connectivity.
+
+Evidence is retained under:
+
+`verification/egress/`
+
+---
+
+## 26. Verification-Only Egress Destination
+
+### Decision
+
+The controlled HTTPS endpoint used to validate TLS interception is a verification dependency, not a permanent application runtime dependency.
+
+### Reason
+
+The baseline self-hosted Cap deployment uses internal MinIO and does not currently require external runtime egress. Adding an external destination solely to make the proxy appear functional would weaken the evidence-derived allowlist model.
+
+### Final intent
+
+The verification destination must remain explicitly classified as `phase: verification` and must not become part of the permanent production allowlist.
+
+The permanent runtime allowlist will contain only destinations justified by observed application behavior or an explicit customer requirement.
+
+---
+
+## 27. Policy as Source of Truth
+
+### Decision
+
+The repository policy file is the authoritative source for customer egress requirements.
+
+### Chosen
+
+`policies/egress-allowlist.yaml`
+
+Each future entry must identify:
+
+- FQDN
+- port
+- component
+- reason
+- what breaks without access
+- installation-time versus permanent use
+
+The proxy configuration should be generated from this policy rather than maintaining a second independently edited allowlist.
+
+### Reason
+
+This prevents configuration drift between the security review and the actual proxy enforcement and matches the assignment requirement that policies be represented as files rather than prose.
+
+---
+
+## 28. Portable Environment Separation
+
+### Decision
+
+Keep environment-specific infrastructure bootstrap separate from the portable Cap workload.
+
+### Chosen
+
+- Helm: portable Cap workload and workload-level proxy configuration.
+- Local environment bootstrap: local registry, local customer-style proxy, customer CA, constrained-cluster-specific setup.
+- Cloud environment: Terraform for cloud primitives and environment bootstrap.
+
+### Trade-off
+
+The local implementation necessarily contains Rancher Desktop/Moby-specific bootstrap logic, but those details must not leak into the Helm workload or customer deployment architecture.
+
+### Principle
+
+The same workload chart should be usable against different customer registries, Kubernetes environments, and egress implementations without depending on the local container runtime.
+
+---
+
+## 29. Current Deliberately Deferred Items
+
+The following remain intentionally incomplete until final submission:
+
+- policy-driven generation of the proxy ConfigMap
+- one-command local installation
+- clean-install proxy denial evidence
+- full-deny proxy air-gap verification after installation
+- no-egress runner verification
+- complete independent image verification
+- rollback from a half-applied state
+- uninstall/no-leftovers proof
+- Terraform cloud environment
+- successful real-cloud deployment
+- final zero-to-working installation recording
+- final documentation and evidence audit
+
+These remain explicit work items rather than being represented as completed.
