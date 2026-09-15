@@ -1,5 +1,5 @@
 === UNINSTALL COMPLETE ===
-Tue Sep 15 02:32:30 PM UTC 2026
+Tue Sep 15 05:54:56 PM UTC 2026
 
 --- Namespaces ---
 Error from server (NotFound): namespaces "cap" not found

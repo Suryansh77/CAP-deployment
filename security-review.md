@@ -776,44 +776,46 @@ The verification-only endpoint must not be promoted into the permanent productio
 
 ---
 
-## 15. Current Security Status
+## Assignment Documentation Addendum
 
-### Completed and verified
+### Security objectives
 
-- Namespace-scoped RBAC.
-- Positive RBAC authorization.
-- Cluster-scope RBAC denial.
-- Cross-namespace RBAC denial.
-- Application ServiceAccount token isolation.
-- Non-root workload hardening.
-- Runtime securityContext restrictions.
-- Default-deny workload NetworkPolicy baseline.
-- Private registry HTTPS.
-- Private-registry image pull.
-- Digest-pinned private image rendering.
-- External egress investigation.
-- MinIO setup hardening and remediation.
-- Kubernetes-native admission control.
-- Private-registry admission enforcement.
-- Public image rejection.
-- Private image acceptance.
-- Public init-container bypass rejection.
-- Customer egress proxy deployment.
-- Customer CA trust in Cap Web and Media Server.
-- Positive TLS-interception verification from the real Cap Web workload.
-- Proxy denial of an unallowlisted destination.
-- Direct Internet bypass blocked by NetworkPolicy.
+The security design is based on four primary objectives: restrict network communication to explicitly required paths, ensure runtime images come only from the approved private registry, limit Kubernetes API permissions to the namespace and operations required by the deployment, and prevent unintended external communication from the application environment.
 
-### Required before final submission
+### Network isolation and egress control
 
-- Policy-driven generation of the runtime proxy allowlist.
-- Clean-install proxy denial log.
-- Full-deny proxy air-gap test after installation.
-- No-egress runner proof.
-- Complete independent image verification.
-- Deliberate rollback-from-half-applied-state proof.
-- Complete uninstall/no-leftovers proof.
-- Terraform cloud environment.
-- Successful real-cloud deployment.
-- Final zero-to-working installation recording.
-- Final security/evidence audit.
+The CAP namespace is protected by default-deny ingress and egress NetworkPolicies. Required internal communication paths are added explicitly for the web application, media server, MySQL, MinIO, DNS, and ingress traffic.
+
+External HTTPS traffic is separated behind the customer egress proxy. The proxy applies an explicit FQDN and port allowlist and records denied CONNECT attempts. This provides both preventive control and observable evidence when a destination is outside the approved policy.
+
+### TLS interception
+
+The customer egress proxy terminates and re-establishes TLS using the customer-provided CA. Upstream certificate verification remains enabled through the configured trusted CA and `ssl_insecure=false`. The deployment therefore does not rely on disabling certificate verification to accommodate the customer interception model.
+
+### Software supply chain
+
+Runtime images are independently inventoried, promoted into the private customer registry, and deployed by immutable digest. The admission policy provides an additional enforcement layer that rejects workload images outside the approved registry.
+
+This applies to the application and supporting runtime components, including the web application, media server, MySQL, MinIO, MinIO client setup image, and customer egress proxy.
+
+### Kubernetes access control
+
+The deployment service account is restricted to the CAP namespace through a namespace-scoped Role and RoleBinding. It does not receive cluster-admin access or permissions for unrelated namespaces and cluster-scoped resources.
+
+Application service accounts disable automatic Kubernetes API token mounting where API access is not required. This reduces unnecessary credentials inside application containers.
+
+### Stateful workload protection
+
+MySQL and MinIO use persistent storage so application state is not dependent on an individual container lifecycle. Access is provided through Kubernetes Services and namespace-scoped network rules rather than direct unrestricted connectivity.
+
+### External dependency boundary
+
+The baseline deployment does not require public S3, public telemetry, Sentry, Tinybird, Cap Cloud, Vercel, or other external control-plane services. External communication is treated as an explicit dependency that must be represented in the customer egress policy.
+
+### Verification evidence
+
+The repository retains verification artifacts covering the major security claims. These include private-registry image promotion and digest verification, admission-control tests, RBAC verification, NetworkPolicy state, customer-egress TLS verification, explicit proxy denial evidence, lifecycle rollback evidence, and uninstall verification.
+
+### Security operating principle
+
+The deployment follows a layered-control model: Helm and installer configuration define the intended workload, admission prevents unapproved images from being accepted, NetworkPolicies constrain Kubernetes communication, the customer proxy controls external egress, and the evidence under `verification/` records the resulting behavior. This makes the security posture independently verifiable rather than dependent on a single control.

@@ -1,186 +1,182 @@
 === UNINSTALL START ===
-Tue Sep 15 02:31:01 PM UTC 2026
+Tue Sep 15 05:53:28 PM UTC 2026
 
 --- Helm release ---
 NAME: cap
-LAST DEPLOYED: Tue Sep 15 13:58:16 2026
+LAST DEPLOYED: Tue Sep 15 17:31:58 2026
 NAMESPACE: cap
 STATUS: deployed
-REVISION: 2
-DESCRIPTION: Upgrade complete
+REVISION: 1
+DESCRIPTION: Install complete
 RESOURCES:
-==> v1/ServiceAccount
-NAME           AGE
-cap-deployer   15h
-cap   15h
-
-==> v1/Secret
-NAME          TYPE     DATA   AGE
-cap-secrets   Opaque   10     15h
-
-==> v1/Role
-NAME           CREATED AT
-cap-deployer   2026-09-14T23:03:59Z
-
-==> v1/Service
-NAME               TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
-cap-media-server   ClusterIP   10.28.13.173   <none>        3456/TCP   15h
-cap-minio   ClusterIP   10.28.13.28   <none>   9000/TCP   15h
-cap-mysql   ClusterIP   None   <none>   3306/TCP   15h
-cap-web   ClusterIP   10.28.5.130   <none>   3000/TCP   15h
-
-==> v1/Deployment
-NAME               READY   UP-TO-DATE   AVAILABLE   AGE
-cap-media-server   1/1     1            1           15h
-cap-web   1/1   1     1     15h
-
-==> v1/StatefulSet
-NAME        READY   AGE
-cap-minio   1/1     15h
-cap-mysql   1/1   15h
-
 ==> v1/Ingress
 NAME   CLASS   HOSTS       ADDRESS   PORTS     AGE
-cap    gce     cap.local             80, 443   15h
-
-==> v1/ValidatingAdmissionPolicy
-NAME                   VALIDATIONS   PARAMKIND   AGE
-cap-private-registry   1             <unset>     15h
-
-==> v1/ConfigMap
-NAME         DATA   AGE
-cap-config   10     15h
-
-==> v1/RoleBinding
-NAME           ROLE                AGE
-cap-deployer   Role/cap-deployer   15h
-
-==> v1/Pod(related)
-NAME                                READY   STATUS    RESTARTS   AGE
-cap-media-server-6d4f76456d-j9fnk   1/1     Running   0          15h
-cap-web-74dfdf49fd-rp5j7   1/1   Running   0     68m
-cap-minio-0   1/1   Running   0     15h
-cap-mysql-0   1/1   Running   0     15h
+cap    gce     cap.local             80, 443   21m
 
 ==> v1/ValidatingAdmissionPolicyBinding
 NAME                   POLICYNAME             PARAMREF   AGE
-cap-private-registry   cap-private-registry   <unset>    15h
+cap-private-registry   cap-private-registry   <unset>    21m
+
+==> v1/Secret
+NAME          TYPE     DATA   AGE
+cap-secrets   Opaque   10     21m
+
+==> v1/ConfigMap
+NAME         DATA   AGE
+cap-config   10     21m
+
+==> v1/Service
+NAME               TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)    AGE
+cap-media-server   ClusterIP   10.28.3.11   <none>        3456/TCP   21m
+cap-minio   ClusterIP   10.28.3.170   <none>   9000/TCP   21m
+cap-mysql   ClusterIP   None   <none>   3306/TCP   21m
+cap-web   ClusterIP   10.28.4.94   <none>   3000/TCP   21m
+
+==> v1/StatefulSet
+NAME        READY   AGE
+cap-minio   1/1     21m
+cap-mysql   1/1   21m
+
+==> v1/ValidatingAdmissionPolicy
+NAME                   VALIDATIONS   PARAMKIND   AGE
+cap-private-registry   1             <unset>     21m
+
+==> v1/ServiceAccount
+NAME           AGE
+cap-deployer   21m
+cap   21m
+
+==> v1/Role
+NAME           CREATED AT
+cap-deployer   2026-09-15T17:32:01Z
+
+==> v1/RoleBinding
+NAME           ROLE                AGE
+cap-deployer   Role/cap-deployer   21m
+
+==> v1/Deployment
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+cap-media-server   1/1     1            1           21m
+cap-web   1/1   1     1     21m
+
+==> v1/Pod(related)
+NAME                                READY   STATUS    RESTARTS   AGE
+cap-media-server-6d4f76456d-wnjhv   1/1     Running   0          21m
+cap-web-74dfdf49fd-g2wgc   1/1   Running   2 (20m ago)   21m
+cap-minio-0   1/1   Running   0     21m
+cap-mysql-0   1/1   Running   0     21m
 
 
 TEST SUITE: None
 
 --- Cap resources ---
-NAME                                    READY   STATUS    RESTARTS   AGE
-pod/cap-media-server-6d4f76456d-j9fnk   1/1     Running   0          15h
-pod/cap-minio-0                         1/1     Running   0          15h
-pod/cap-mysql-0                         1/1     Running   0          15h
-pod/cap-web-74dfdf49fd-rp5j7            1/1     Running   0          68m
+NAME                                    READY   STATUS    RESTARTS      AGE
+pod/cap-media-server-6d4f76456d-wnjhv   1/1     Running   0             21m
+pod/cap-minio-0                         1/1     Running   0             21m
+pod/cap-mysql-0                         1/1     Running   0             21m
+pod/cap-web-74dfdf49fd-g2wgc            1/1     Running   2 (20m ago)   21m
 
-NAME                       TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
-service/cap-media-server   ClusterIP   10.28.13.173   <none>        3456/TCP   15h
-service/cap-minio          ClusterIP   10.28.13.28    <none>        9000/TCP   15h
-service/cap-mysql          ClusterIP   None           <none>        3306/TCP   15h
-service/cap-web            ClusterIP   10.28.5.130    <none>        3000/TCP   15h
+NAME                       TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)    AGE
+service/cap-media-server   ClusterIP   10.28.3.11    <none>        3456/TCP   21m
+service/cap-minio          ClusterIP   10.28.3.170   <none>        9000/TCP   21m
+service/cap-mysql          ClusterIP   None          <none>        3306/TCP   21m
+service/cap-web            ClusterIP   10.28.4.94    <none>        3000/TCP   21m
 
 NAME                               READY   UP-TO-DATE   AVAILABLE   AGE
-deployment.apps/cap-media-server   1/1     1            1           15h
-deployment.apps/cap-web            1/1     1            1           15h
+deployment.apps/cap-media-server   1/1     1            1           21m
+deployment.apps/cap-web            1/1     1            1           21m
 
 NAME                                          DESIRED   CURRENT   READY   AGE
-replicaset.apps/cap-media-server-6d4f76456d   1         1         1       15h
-replicaset.apps/cap-web-74dfdf49fd            1         1         1       15h
+replicaset.apps/cap-media-server-6d4f76456d   1         1         1       21m
+replicaset.apps/cap-web-74dfdf49fd            1         1         1       21m
 
 NAME                         READY   AGE
-statefulset.apps/cap-minio   1/1     15h
-statefulset.apps/cap-mysql   1/1     15h
+statefulset.apps/cap-minio   1/1     21m
+statefulset.apps/cap-mysql   1/1     21m
 
 NAME                         DATA   AGE
-configmap/cap-config         10     15h
-configmap/kube-root-ca.crt   1      15h
+configmap/cap-config         10     21m
+configmap/kube-root-ca.crt   1      22m
 
 NAME                               TYPE                 DATA   AGE
-secret/cap-secrets                 Opaque               10     15h
-secret/cap-tls                     kubernetes.io/tls    2      15h
-secret/customer-egress-ca          Opaque               1      15h
-secret/sh.helm.release.v1.cap.v1   helm.sh/release.v1   1      15h
-secret/sh.helm.release.v1.cap.v2   helm.sh/release.v1   1      32m
+secret/cap-secrets                 Opaque               10     21m
+secret/cap-tls                     kubernetes.io/tls    2      21m
+secret/customer-egress-ca          Opaque               1      22m
+secret/sh.helm.release.v1.cap.v1   helm.sh/release.v1   1      21m
 
 NAME                          AGE
-serviceaccount/cap            15h
-serviceaccount/cap-deployer   15h
-serviceaccount/default        15h
+serviceaccount/cap            21m
+serviceaccount/cap-deployer   21m
+serviceaccount/default        22m
 
 NAME                                          CREATED AT
-role.rbac.authorization.k8s.io/cap-deployer   2026-09-14T23:03:59Z
+role.rbac.authorization.k8s.io/cap-deployer   2026-09-15T17:32:01Z
 
 NAME                                                 ROLE                AGE
-rolebinding.rbac.authorization.k8s.io/cap-deployer   Role/cap-deployer   15h
+rolebinding.rbac.authorization.k8s.io/cap-deployer   Role/cap-deployer   21m
 
 NAME                                                                          POD-SELECTOR                               AGE
-networkpolicy.networking.k8s.io/allow-dns-egress                              <none>                                     68m
-networkpolicy.networking.k8s.io/allow-ingress-controller-to-web               app.kubernetes.io/component=web            15h
-networkpolicy.networking.k8s.io/allow-media-server-to-customer-egress-proxy   app.kubernetes.io/component=media-server   15h
-networkpolicy.networking.k8s.io/allow-media-server-to-web                     app.kubernetes.io/component=media-server   15h
-networkpolicy.networking.k8s.io/allow-media-server-to-web-ingress             app.kubernetes.io/component=web            15h
-networkpolicy.networking.k8s.io/allow-minio-setup-ingress                     app.kubernetes.io/component=minio          15h
-networkpolicy.networking.k8s.io/allow-minio-setup-to-minio                    app.kubernetes.io/component=minio-setup    15h
-networkpolicy.networking.k8s.io/allow-web-required-egress                     app.kubernetes.io/component=web            15h
-networkpolicy.networking.k8s.io/allow-web-to-customer-egress-proxy            app.kubernetes.io/component=web            15h
-networkpolicy.networking.k8s.io/allow-web-to-media-server                     app.kubernetes.io/component=media-server   15h
-networkpolicy.networking.k8s.io/allow-web-to-minio                            app.kubernetes.io/component=minio          15h
-networkpolicy.networking.k8s.io/allow-web-to-mysql-ingress                    app.kubernetes.io/component=mysql          15h
-networkpolicy.networking.k8s.io/default-deny-ingress-egress                   <none>                                     15h
+networkpolicy.networking.k8s.io/allow-dns-egress                              <none>                                     21m
+networkpolicy.networking.k8s.io/allow-ingress-controller-to-web               app.kubernetes.io/component=web            21m
+networkpolicy.networking.k8s.io/allow-media-server-to-customer-egress-proxy   app.kubernetes.io/component=media-server   21m
+networkpolicy.networking.k8s.io/allow-media-server-to-web                     app.kubernetes.io/component=media-server   21m
+networkpolicy.networking.k8s.io/allow-media-server-to-web-ingress             app.kubernetes.io/component=web            21m
+networkpolicy.networking.k8s.io/allow-minio-setup-ingress                     app.kubernetes.io/component=minio          21m
+networkpolicy.networking.k8s.io/allow-minio-setup-to-minio                    app.kubernetes.io/component=minio-setup    21m
+networkpolicy.networking.k8s.io/allow-web-required-egress                     app.kubernetes.io/component=web            21m
+networkpolicy.networking.k8s.io/allow-web-to-customer-egress-proxy            app.kubernetes.io/component=web            21m
+networkpolicy.networking.k8s.io/allow-web-to-media-server                     app.kubernetes.io/component=media-server   21m
+networkpolicy.networking.k8s.io/allow-web-to-minio                            app.kubernetes.io/component=minio          21m
+networkpolicy.networking.k8s.io/allow-web-to-mysql-ingress                    app.kubernetes.io/component=mysql          21m
+networkpolicy.networking.k8s.io/default-deny-ingress-egress                   <none>                                     21m
 
 NAME                                           STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   VOLUMEATTRIBUTESCLASS   AGE
-persistentvolumeclaim/minio-data-cap-minio-0   Bound    pvc-397f0bf9-b15b-4626-8abb-7a5b3d82f38d   20Gi       RWO            standard-rwo   <unset>                 15h
-persistentvolumeclaim/mysql-data-cap-mysql-0   Bound    pvc-c4da7d96-7bc5-4721-b94e-6c82141ef724   10Gi       RWO            standard-rwo   <unset>                 15h
+persistentvolumeclaim/minio-data-cap-minio-0   Bound    pvc-3cbfa652-4a7e-45e9-9fff-9b1b5f534710   20Gi       RWO            standard-rwo   <unset>                 21m
+persistentvolumeclaim/mysql-data-cap-mysql-0   Bound    pvc-8d027810-38c3-4e59-9286-74f34c896982   10Gi       RWO            standard-rwo   <unset>                 21m
 
 NAME                            CLASS   HOSTS       ADDRESS   PORTS     AGE
-ingress.networking.k8s.io/cap   gce     cap.local             80, 443   15h
+ingress.networking.k8s.io/cap   gce     cap.local             80, 443   21m
 
 --- Customer egress resources ---
 NAME                                                 READY   STATUS    RESTARTS   AGE
-pod/customer-egress-proxy-7f547cfbdc-tkjq4           1/1     Running   0          36m
-pod/customer-egress-upstream-test-5594688fc9-xsfds   1/1     Running   0          15h
+pod/customer-egress-proxy-7cdb46c7cf-lxjh8           1/1     Running   0          22m
+pod/customer-egress-upstream-test-5594688fc9-kshxd   1/1     Running   0          22m
 
 NAME                            TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)    AGE
-service/customer-egress-proxy   ClusterIP   10.28.13.38   <none>        8080/TCP   15h
-service/egress-test             ClusterIP   10.28.4.51    <none>        8443/TCP   15h
+service/customer-egress-proxy   ClusterIP   10.28.4.73    <none>        8080/TCP   22m
+service/egress-test             ClusterIP   10.28.12.52   <none>        8443/TCP   22m
 
 NAME                                            READY   UP-TO-DATE   AVAILABLE   AGE
-deployment.apps/customer-egress-proxy           1/1     1            1           15h
-deployment.apps/customer-egress-upstream-test   1/1     1            1           15h
+deployment.apps/customer-egress-proxy           1/1     1            1           22m
+deployment.apps/customer-egress-upstream-test   1/1     1            1           22m
 
 NAME                                                       DESIRED   CURRENT   READY   AGE
-replicaset.apps/customer-egress-proxy-6d5c6677cc           0         0         0       59m
-replicaset.apps/customer-egress-proxy-7cdb46c7cf           0         0         0       15h
-replicaset.apps/customer-egress-proxy-7f547cfbdc           1         1         1       36m
-replicaset.apps/customer-egress-upstream-test-5594688fc9   1         1         1       15h
+replicaset.apps/customer-egress-proxy-7cdb46c7cf           1         1         1       22m
+replicaset.apps/customer-egress-upstream-test-5594688fc9   1         1         1       22m
 
 NAME                                             DATA   AGE
-configmap/customer-egress-allowlist              1      60m
-configmap/customer-egress-proxy-config           2      15h
-configmap/customer-egress-upstream-test-server   1      15h
-configmap/kube-root-ca.crt                       1      15h
+configmap/customer-egress-proxy-config           2      22m
+configmap/customer-egress-upstream-test-server   1      22m
+configmap/kube-root-ca.crt                       1      22m
 
 NAME                                       TYPE                DATA   AGE
-secret/customer-egress-ca                  Opaque              2      15h
-secret/customer-egress-upstream-ca         Opaque              1      15h
-secret/customer-egress-upstream-test-tls   kubernetes.io/tls   2      15h
+secret/customer-egress-ca                  Opaque              2      22m
+secret/customer-egress-upstream-ca         Opaque              1      22m
+secret/customer-egress-upstream-test-tls   kubernetes.io/tls   2      22m
 
 NAME                     AGE
-serviceaccount/default   15h
+serviceaccount/default   22m
 
 NAME                                                            POD-SELECTOR                                   AGE
-networkpolicy.networking.k8s.io/customer-egress-proxy-egress    app.kubernetes.io/name=customer-egress-proxy   15h
-networkpolicy.networking.k8s.io/customer-egress-proxy-ingress   app.kubernetes.io/name=customer-egress-proxy   15h
+networkpolicy.networking.k8s.io/customer-egress-proxy-egress    app.kubernetes.io/name=customer-egress-proxy   22m
+networkpolicy.networking.k8s.io/customer-egress-proxy-ingress   app.kubernetes.io/name=customer-egress-proxy   22m
 
 --- Admission controls ---
 NAME                   VALIDATIONS   PARAMKIND   AGE
-cap-private-registry   1             <unset>     15h
+cap-private-registry   1             <unset>     21m
 NAME                   POLICYNAME             PARAMREF   AGE
-cap-private-registry   cap-private-registry   <unset>    15h
+cap-private-registry   cap-private-registry   <unset>    21m
 
 --- Relevant Helm releases ---
 NAME	NAMESPACE	REVISION	UPDATED                                	STATUS  	CHART    	APP VERSION
-cap 	cap      	2       	2026-09-15 13:58:16.061973498 +0000 UTC	deployed	cap-0.1.0	0.6.0      
+cap 	cap      	1       	2026-09-15 17:31:58.424620068 +0000 UTC	deployed	cap-0.1.0	0.6.0

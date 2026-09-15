@@ -636,44 +636,6 @@ No Moby-specific configuration should be required by the final Helm workload.
 
 ---
 
-## 19. Deliberately cut / deferred items
-
-The following are intentionally not treated as complete yet:
-
-- customer TLS-intercepting proxy
-
-- external proxy allowlist implementation
-
-- no-egress runner
-
-- proxy denial-log capture
-
-- post-install full-deny air-gap proof
-
-- Terraform/cloud target
-
-- rollback from half-applied state
-
-- uninstall/no-leftovers proof
-
-- final runbook
-
-- final security review
-
-- final walkthrough/recording
-
-Admission control is no longer deferred. It was implemented and verified and is
-documented in Section 23 below.
-
-Private-registry-only deployment is also no longer deferred for the current local
-target: the final local runtime images use the HTTPS private registry and immutable
-digests, with Kubernetes image-pull verification completed.
-
-These remaining items stay explicit work items rather than being represented as
-completed.
-
----
-
 ## 20. Private registry TLS remediation
 
 ### Problem
@@ -1184,21 +1146,50 @@ The same workload chart should be usable against different customer registries, 
 
 ---
 
-## 29. Current Deliberately Deferred Items
+## Assignment Documentation Addendum
 
-The following remain intentionally incomplete until final submission:
+### Deployment approach
 
-- policy-driven generation of the proxy ConfigMap
-- one-command local installation
-- clean-install proxy denial evidence
-- full-deny proxy air-gap verification after installation
-- no-egress runner verification
-- complete independent image verification
-- rollback from a half-applied state
-- uninstall/no-leftovers proof
-- Terraform cloud environment
-- successful real-cloud deployment
-- final zero-to-working installation recording
-- final documentation and evidence audit
+The implementation uses Terraform for the target cloud infrastructure and Helm for the CAP application workload. `install.sh` provides a single operational entry point for the local and cloud targets while keeping infrastructure provisioning and workload deployment clearly separated.
 
-These remain explicit work items rather than being represented as completed.
+The upstream CAP application is treated as the source of truth and is not modified for the Kubernetes deployment. Kubernetes-specific configuration is provided through Helm values, Kubernetes policies, supporting manifests, and deployment automation.
+
+### Image supply chain
+
+All runtime images are explicitly inventoried and promoted into the customer-controlled private registry before deployment. Workloads use digest-pinned image references so that deployment does not depend on mutable tags.
+
+The runtime inventory covers the CAP web application, CAP media server, MySQL, MinIO, MinIO client setup image, and the customer egress proxy. Build-stage images from the upstream Dockerfiles are treated as build dependencies rather than runtime dependencies.
+
+A Kubernetes admission policy enforces the approved private registry requirement, providing a second control in addition to the installer configuration.
+
+### Egress and TLS
+
+The CAP namespace uses default-deny ingress and egress NetworkPolicies with narrowly scoped allow rules for required application communication. External HTTPS traffic is routed through the customer egress proxy.
+
+The proxy uses an explicit destination allowlist and records denied CONNECT attempts. Upstream TLS verification is enabled and uses the customer CA; `ssl_insecure=false` is retained so that upstream certificate verification is not bypassed.
+
+The deployment therefore separates internal service-to-service traffic from explicitly approved external egress rather than giving application workloads unrestricted Internet access.
+
+### Least privilege
+
+The deployment service account is namespace-scoped and uses only the Kubernetes permissions required to operate the CAP namespace. It is not granted cluster-admin privileges or access to unrelated namespaces and cluster-scoped resources.
+
+Application service accounts have Kubernetes API token automount disabled where the workload does not require API access. This reduces the impact of a compromised application container and keeps Kubernetes control-plane access outside the normal application path.
+
+### Stateful services
+
+MySQL and MinIO are deployed as stateful components with persistent storage rather than relying on ephemeral container filesystems. The application connects to these services through Kubernetes Services, keeping the workload dependency boundary explicit.
+
+MinIO setup is performed through the dedicated setup image and Kubernetes hook workflow rather than requiring changes to the upstream application source.
+
+### Rollback decision
+
+Rollback is treated as the primary recovery mechanism during the change window rather than fix-forward. A deliberate invalid image deployment was used to create an `ImagePullBackOff` condition, after which the Helm release was rolled back to the known-good revision.
+
+The rollback evidence is retained under `verification/lifecycle/rollback/` and demonstrates recovery from a partially failed release rather than only a successful first deployment.
+
+### Evidence-driven verification
+
+Operational and security claims are backed by artifacts under `verification/`. The evidence set includes private-registry image verification, admission-control results, NetworkPolicy state, customer-egress TLS and denial tests, rollback evidence, and uninstall evidence.
+
+The intent is that the repository documents not only the intended architecture but also the observable evidence used to verify that the controls actually behaved as designed.

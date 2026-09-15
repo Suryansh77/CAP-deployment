@@ -223,3 +223,35 @@ Negative tests will deliberately demonstrate that prohibited image sources, netw
 The deployment will support controlled upgrades and rollback using Helm.
 
 The final verification will also demonstrate that the environment can be cleanly removed and that the operator has documented recovery steps for partially applied or failed deployments.
+
+## Assignment Documentation Addendum
+
+### Deployment model
+
+The deployment is intentionally split into two layers. Terraform provisions the cloud infrastructure required for the target environment, while Helm manages the CAP workload inside the customer namespace. `install.sh` is the single entry point and exposes the two supported targets: `./install.sh local` for the local Rancher Desktop environment and `./install.sh cloud` for the GKE target.
+
+The upstream CAP application source is not modified. Kubernetes-specific behavior is implemented outside the application through Helm values, Kubernetes policies, customer-egress infrastructure, and deployment automation.
+
+### Runtime components and dependency boundary
+
+The runtime deployment contains the CAP web application, CAP media server, MySQL, MinIO, the MinIO client used for setup, and the customer egress proxy. Runtime images are promoted into the customer/private registry and deployed using immutable digest references rather than floating tags. Build-stage images used by the upstream Dockerfiles are not runtime dependencies and are therefore not deployed to the cluster.
+
+The application data path remains inside the customer environment: the web application communicates with MySQL, MinIO, and the media server through Kubernetes networking. External HTTPS access is forced through the customer egress proxy rather than allowing workloads unrestricted Internet access.
+
+### Customer security constraints mapped to the architecture
+
+The CAP namespace starts from default-deny ingress and egress NetworkPolicies and adds only the communication paths required by the workload. External access is mediated by the customer egress proxy, whose allowlist is explicit and whose upstream TLS verification uses the customer CA with `ssl_insecure=false`.
+
+A private-registry admission policy rejects workload images that are not sourced from the approved private registry. Runtime service accounts do not automatically receive Kubernetes API credentials, and the deployment service account is namespace-scoped rather than cluster-admin.
+
+The design also avoids introducing public telemetry, public S3, Sentry, Tinybird, Cap Cloud, Vercel, or other external control-plane dependencies into the baseline deployment. Any future external integration would require an explicit customer approval and corresponding allowlist entry.
+
+### Environment-specific versus portable layers
+
+The Helm workload and Kubernetes policy model are designed to remain largely runtime-neutral. Environment-specific behavior is concentrated in infrastructure provisioning, private-registry promotion, ingress configuration, storage defaults, and the customer egress implementation.
+
+The current local validation was performed on Rancher Desktop and is useful for workload, Helm, RBAC, admission, proxy, and lifecycle validation. Some cluster-level guarantees are intended to be validated on the cloud target as well, because Kubernetes distributions and local runtimes can differ in their enforcement behavior.
+
+### Evidence
+
+Detailed evidence is retained under `verification/`, including image inventory and verification, admission-control verification, network-policy state, customer-egress TLS tests and denial logs, lifecycle rollback evidence, and uninstall evidence. These artifacts are intended to make the security and operational claims independently checkable rather than relying only on prose.

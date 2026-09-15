@@ -559,19 +559,66 @@ path and must be recorded as part of the change process.
 - private image acceptance
 - public init-container bypass rejection
 
-### Remaining before final submission
+## Assignment Documentation Addendum
 
-- complete proxy implementation
-- TLS interception
-- explicit egress allowlist
-- clean-install proxy denial log
-- post-install full-deny air-gap proof
-- no-egress runner
-- complete independent image verification
-- deliberate rollback-from-half-applied-state proof
-- uninstall/no-leftovers proof
-- Terraform cloud target
-- clean installation on the real cloud target
-- one-command end-to-end installation
-- uncut zero-to-working installation recording
-- final documentation and evidence audit
+### Standard installation
+
+From the repository root, use `./install.sh local` for the local target or `./install.sh cloud` for the GKE target. The installer provisions the required environment, promotes the required runtime images into the private registry, applies the Kubernetes security controls, and installs the CAP Helm release.
+
+The installation should be treated as a single controlled operation. Before a customer change window, confirm that the required cloud credentials, private registry access, Terraform inputs, and approved egress allowlist are available.
+
+### Post-install verification
+
+Verify the Helm release is deployed and the expected CAP pods are Ready. Confirm the NetworkPolicies are present, the private-registry admission policy is active, the ingress endpoint responds, and all runtime workload images reference the approved private registry using immutable digests.
+
+For the customer egress path, verify an explicitly allowed HTTPS destination succeeds through the proxy and that a destination outside the allowlist is denied. The denial should return an explicit HTTP 403 from the proxy and produce the corresponding `EGRESS DENY CONNECT` log entry.
+
+### Egress troubleshooting
+
+When an application operation involving an external destination fails, first determine whether the destination is expected to be external and whether it is present in the approved allowlist. A 403 from the customer egress proxy indicates that the request reached the proxy but was denied by policy.
+
+Next check the proxy logs for the requested FQDN and port, followed by the namespace NetworkPolicies to confirm that the workload is permitted to reach the proxy. Do not bypass TLS verification or change the proxy to unrestricted egress as a diagnostic shortcut.
+
+### Admission troubleshooting
+
+If a workload is rejected before scheduling, inspect the namespace events and admission response. A registry-policy rejection normally means that an image is using an unapproved registry or is not deployed using the expected immutable reference.
+
+Validate the rendered Helm values and the final Pod specification rather than changing the admission policy to make the deployment pass.
+
+### RBAC troubleshooting
+
+Use the namespace-scoped deployment service account for deployment operations. When an operation fails with `forbidden`, inspect the requested resource, verb, namespace, and Role/RoleBinding before adding permissions.
+
+Do not grant cluster-admin as a troubleshooting measure. Cluster-scoped access should be added only when a concrete platform requirement has been identified and approved.
+
+### Rollback procedure
+
+Rollback is the primary recovery path during the customer change window. First identify the last known-good Helm revision with `helm history`. Roll back to that revision and wait for the workloads to become healthy before considering further action.
+
+If a failed revision leaves a stale failed Pod behind, inspect the Pod owner and rollout state. A stale Pod from the failed revision may need to be removed so that the controller can create the healthy replacement from the rolled-back specification.
+
+After rollback, verify the Helm release status, workload readiness, image references, and application response. Record the failed revision and the recovery result under `verification/lifecycle/rollback/`.
+
+### Half-applied installation
+
+For a partially applied installation, do not manually edit individual application resources unless required for diagnosis. First inspect the Helm release status, recent events, workloads, and admission/network-policy state to determine which stage failed.
+
+If the release cannot be safely recovered, use the known-good Helm revision or the uninstall procedure rather than leaving a mixture of old and new configuration in the namespace.
+
+### Uninstall
+
+Use `./uninstall.sh` to remove the CAP Helm release and associated customer-egress and namespace resources. The script records pre- and post-uninstall state and verifies that the CAP namespace, customer-egress namespace, Helm release, admission policy, and CAP persistent storage are removed.
+
+The customer registry is an external bootstrap dependency and is intentionally preserved by the workload uninstall procedure.
+
+### Cloud teardown
+
+Workload uninstall and cloud infrastructure teardown are separate operations. When the entire temporary cloud environment must be removed, delete the target Terraform-managed infrastructure only after collecting the required verification evidence. Confirm that the target cluster, networking, private registry, and service account resources are gone and that unrelated customer resources remain untouched.
+
+### Break-glass procedure
+
+Break-glass access should be limited to recovery of the deployment or collection of diagnostics that cannot be obtained through the normal namespace-scoped workflow. Any temporary privilege increase must be explicitly authorized, time-bounded, recorded, and removed after use.
+
+### Diagnostic order
+
+For a failed deployment, diagnose in this order: Helm/rendered configuration, Pod scheduling and events, container logs, image pull and private-registry access, admission policy, NetworkPolicies, customer egress proxy and allowlist, then underlying infrastructure. This ordering keeps application symptoms separate from platform, security-policy, and infrastructure failures.

@@ -1,0 +1,13 @@
+[eval]:1
+const net=require("net");const s=net.connect(8080,"customer-egress-proxy.customer-egress.svc.cluster.local",()=>s.write("CONNECT example.com:443 HTTP/1.1\\r\\nHost: example.com:443\\r\\nConnection: close\\r\\n\\r\\n"));let r="";s.on("data",d=>{r+=d;if(r.includes("\\r\\n\\r\\n")){process.stdout.write(r);process.exit(/HTTP\\/1\\.1 403 Forbidden/i.test(r)?0:1)}});s.on("error",()=>process.exit(1));s.setTimeout(15000,()=>process.exit(1));
+                                                                                                                                                                                                                                                                                                                             ^
+Expected ',', got 'numeric literal'
+
+SyntaxError: Invalid regular expression flags
+    at makeContextifyScript (node:internal/vm:194:14)
+    at compileScript (node:internal/process/execution:388:10)
+    at evalTypeScript (node:internal/process/execution:260:22)
+    at node:internal/main/eval_string:71:3
+
+Node.js v24.20.0
+command terminated with exit code 1
