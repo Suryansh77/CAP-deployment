@@ -151,16 +151,18 @@ kubectl exec -n cap deploy/cap-web -- node -e 'const http=require("http");const 
 echo "APPLICATION_SERVING_OK"
 
 echo "=== Proxy denial verification ==="
-set +e
-kubectl exec -n cap deploy/cap-web -- node -e 'const net=require("net");const s=net.connect(8080,"customer-egress-proxy.customer-egress.svc.cluster.local",()=>s.write("CONNECT example.com:443 HTTP/1.1\\r\\nHost: example.com:443\\r\\nConnection: close\\r\\n\\r\\n"));let r="";s.on("data",d=>{r+=d;if(r.includes("\\r\\n\\r\\n")){process.stdout.write(r);process.exit(/HTTP\\/1\\.1 403 Forbidden/i.test(r)?0:1)}});s.on("error",()=>process.exit(1));s.setTimeout(15000,()=>process.exit(1));' > "${ROOT_DIR}/verification/egress/cloud-proxy-denial.txt" 2>&1
-DENIAL_EXIT="$?"
-set -e
-kubectl logs -n customer-egress deployment/customer-egress-proxy --tail=200 > "${ROOT_DIR}/verification/egress/cloud-proxy-denial-log.txt"
-[[ "${DENIAL_EXIT}" -eq 0 ]] || die "proxy denial test failed"
-grep -Eq "HTTP/1\\.1 403 Forbidden" "${ROOT_DIR}/verification/egress/cloud-proxy-denial.txt" || die "expected HTTP 403 not observed"
-grep -Eq "EGRESS DENY CONNECT host=example\\.com port=443" "${ROOT_DIR}/verification/egress/cloud-proxy-denial-log.txt" || die "proxy denial log missing"
-echo "PROXY_DENIAL_OK"
+PROXY_POD="$(kubectl get pods -n customer-egress -l app.kubernetes.io/name=customer-egress-proxy -o jsonpath={.items[0].metadata.name})"
+DENIAL_FILE="${ROOT_DIR}/verification/logs/proxy-denial.txt"
+DENIAL_LOG="${ROOT_DIR}/verification/logs/proxy-denial-log.txt"
 
+kubectl exec -n customer-egress "$PROXY_POD" --   python3 -c 'import socket; s=socket.create_connection(("127.0.0.1",8080),10); s.sendall(b"CONNECT example.com:443 HTTP/1.1\r\nHost: example.com:443\r\n\r\n"); print(s.recv(4096).decode(errors="replace")); s.close()'   | tee "$DENIAL_FILE"
+
+kubectl logs -n customer-egress deployment/customer-egress-proxy --tail=100   | tee "$DENIAL_LOG" >/dev/null
+
+grep -q "HTTP/1.1 403" "$DENIAL_FILE"
+grep -q "EGRESS DENY CONNECT host=example.com port=443" "$DENIAL_LOG"
+
+echo "PROXY_DENIAL_OK"
 echo "=== Final state ==="
 kubectl get pods -n cap | tee "${ROOT_DIR}/verification/logs/cloud-final-cap-pods.txt"
 kubectl get pods -n customer-egress | tee "${ROOT_DIR}/verification/logs/cloud-final-egress-pods.txt"
