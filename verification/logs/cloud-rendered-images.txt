@@ -1,0 +1,5 @@
+          image: "asia-south1-docker.pkg.dev/project-8d66f557-9c7f-49c8-a19/cap/cap-media-server@sha256:74f20fbc766699bd71bf32d72b9598eeb3bc6b95d5b6ed6a0cf491f9b39128c8"
+          image: "asia-south1-docker.pkg.dev/project-8d66f557-9c7f-49c8-a19/cap/cap-web@sha256:aed55d6115d3f1b3ab413ba61984939cec0b3fc5a561609e97b828e3c313f675"
+          image: "asia-south1-docker.pkg.dev/project-8d66f557-9c7f-49c8-a19/cap/minio@sha256:a1a8bd4ac40ad7881a245bab97323e18f971e4d4cba2c2007ec1bedd21cbaba2"
+          image: "asia-south1-docker.pkg.dev/project-8d66f557-9c7f-49c8-a19/cap/mysql@sha256:62fb722c78b24245ddff1796a0fcee4a49cc5b87e0aaaf20c92d1da9e0a2497b"
+          image: "asia-south1-docker.pkg.dev/project-8d66f557-9c7f-49c8-a19/cap/minio-mc@sha256:eb4ea9884b77704230e2423e9004d2fa738dc272876b9cc41a297d29443b8780"

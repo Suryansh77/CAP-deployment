@@ -1,0 +1,3 @@
+NAME                                             READY   STATUS    RESTARTS   AGE
+customer-egress-proxy-7cdb46c7cf-tk298           1/1     Running   0          2m39s
+customer-egress-upstream-test-5594688fc9-t9rt5   1/1     Running   0          2m41s

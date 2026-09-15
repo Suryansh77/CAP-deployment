@@ -1,0 +1,64 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  annotations:
+    meta.helm.sh/release-name: cap
+    meta.helm.sh/release-namespace: cap
+  creationTimestamp: "2026-09-15T18:23:39Z"
+  generation: 1
+  labels:
+    app.kubernetes.io/managed-by: Helm
+  name: cap-private-registry
+  resourceVersion: "1789496619969439018"
+  uid: 807b9a85-541e-4e10-bd95-e35ae7801bcf
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    matchPolicy: Equivalent
+    namespaceSelector:
+      matchLabels:
+        kubernetes.io/metadata.name: cap
+    objectSelector: {}
+    resourceRules:
+    - apiGroups:
+      - ""
+      apiVersions:
+      - v1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - pods
+      scope: Namespaced
+    - apiGroups:
+      - ""
+      apiVersions:
+      - v1
+      operations:
+      - UPDATE
+      resources:
+      - pods/ephemeralcontainers
+      scope: Namespaced
+  validations:
+  - expression: |
+      object.spec.containers.all(c,
+        c.image.startsWith("asia-south1-docker.pkg.dev/project-8d66f557-9c7f-49c8-a19/cap/")
+      ) && (
+        !has(object.spec.initContainers)
+        ||
+        object.spec.initContainers.all(c,
+          c.image.startsWith("asia-south1-docker.pkg.dev/project-8d66f557-9c7f-49c8-a19/cap/")
+        )
+      ) && (
+        !has(object.spec.ephemeralContainers)
+        ||
+        object.spec.ephemeralContainers.all(c,
+          c.image.startsWith("asia-south1-docker.pkg.dev/project-8d66f557-9c7f-49c8-a19/cap/")
+        )
+      )
+    message: All Cap Pod container images, including init and ephemeral containers,
+      must come from the approved private registry.
+    reason: Forbidden
+status:
+  observedGeneration: 1
+  typeChecking: {}

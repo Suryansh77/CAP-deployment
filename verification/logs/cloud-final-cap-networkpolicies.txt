@@ -1,0 +1,14 @@
+NAME                                          POD-SELECTOR                               AGE
+allow-dns-egress                              <none>                                     2m21s
+allow-ingress-controller-to-web               app.kubernetes.io/component=web            2m20s
+allow-media-server-to-customer-egress-proxy   app.kubernetes.io/component=media-server   2m18s
+allow-media-server-to-web                     app.kubernetes.io/component=media-server   2m19s
+allow-media-server-to-web-ingress             app.kubernetes.io/component=web            2m17s
+allow-minio-setup-ingress                     app.kubernetes.io/component=minio          2m16s
+allow-minio-setup-to-minio                    app.kubernetes.io/component=minio-setup    2m17s
+allow-web-required-egress                     app.kubernetes.io/component=web            2m15s
+allow-web-to-customer-egress-proxy            app.kubernetes.io/component=web            2m13s
+allow-web-to-media-server                     app.kubernetes.io/component=media-server   2m19s
+allow-web-to-minio                            app.kubernetes.io/component=minio          2m14s
+allow-web-to-mysql-ingress                    app.kubernetes.io/component=mysql          2m15s
+default-deny-ingress-egress                   <none>                                     2m21s

@@ -1,0 +1,5 @@
+NAME                                READY   STATUS    RESTARTS      AGE
+cap-media-server-6d4f76456d-xlbmr   1/1     Running   0             2m6s
+cap-minio-0                         1/1     Running   0             2m6s
+cap-mysql-0                         1/1     Running   0             2m6s
+cap-web-74dfdf49fd-5j445            1/1     Running   2 (60s ago)   2m7s

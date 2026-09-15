@@ -19,3 +19,9 @@ environment/customer-egress/test-ca/*.crt
 
 # Generated customer egress policy
 environment/customer-egress/generated/
+.terraform/
+**/.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
