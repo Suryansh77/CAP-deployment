@@ -1,0 +1,39 @@
+suryansh7kathayat@cloudshell:~/CAP-deployment$ ./uninstall.sh
+[uninstall] Starting uninstall at Tue Sep 15 02:31:01 PM UTC 2026
+[uninstall] Cap namespace: cap
+[uninstall] Egress namespace: customer-egress
+[uninstall] Helm release: cap
+[uninstall] Removing Helm release
+release "cap" uninstalled
+[uninstall] Removing cluster-scoped admission controls
+[uninstall] Removing customer egress namespace
+namespace "customer-egress" deleted
+[uninstall] Removing Cap namespace
+namespace "cap" deleted
+[uninstall] Verifying no installation namespaces remain
+[uninstall] Verifying cluster-scoped admission controls are gone
+[uninstall] Verifying no Cap Helm release remains
+[uninstall] Verifying associated persistent volumes are gone
+[uninstall] Verifying bootstrap registry remains intact
+[uninstall] WARNING: cap-registry was not found
+=== UNINSTALL COMPLETE ===
+Tue Sep 15 02:32:30 PM UTC 2026
+
+--- Namespaces ---
+Error from server (NotFound): namespaces "cap" not found
+Error from server (NotFound): namespaces "customer-egress" not found
+
+--- Admission controls ---
+Error from server (NotFound): validatingadmissionpolicies.admissionregistration.k8s.io "cap-private-registry" not found
+Error from server (NotFound): validatingadmissionpolicybindings.admissionregistration.k8s.io "cap-private-registry" not found
+
+--- Helm release ---
+NAME    NAMESPACE       REVISION        UPDATED STATUS  CHART   APP VERSION
+
+--- Remaining Cap/Egress namespaces ---
+
+--- Bootstrap registry ---
+
+RESULT=PASS
+
+UNINSTALL_COMPLETE

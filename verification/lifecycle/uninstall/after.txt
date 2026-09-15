@@ -1,5 +1,5 @@
 === UNINSTALL COMPLETE ===
-Mon Sep 14 21:00:35 IST 2026
+Tue Sep 15 02:32:30 PM UTC 2026
 
 --- Namespaces ---
 Error from server (NotFound): namespaces "cap" not found
@@ -15,6 +15,5 @@ NAME	NAMESPACE	REVISION	UPDATED	STATUS	CHART	APP VERSION
 --- Remaining Cap/Egress namespaces ---
 
 --- Bootstrap registry ---
-cap-registry                                                                                                            registry:2                      Up 19 hours
 
 RESULT=PASS

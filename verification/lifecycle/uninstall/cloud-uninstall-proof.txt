@@ -1,0 +1,26 @@
+=== CLEAN CLOUD UNINSTALL PROOF ===
+
+Environment: GKE cloud target
+Date: 2026-09-15
+
+Action:
+./uninstall.sh
+
+Observed:
+- Helm release cap uninstalled successfully.
+- Namespace cap deleted and verified absent.
+- Namespace customer-egress deleted and verified absent.
+- ValidatingAdmissionPolicy cap-private-registry deleted and verified absent.
+- ValidatingAdmissionPolicyBinding cap-private-registry deleted and verified absent.
+- Helm release cap verified absent from all namespaces.
+- Remaining cap/customer-egress namespaces verified empty.
+- Associated CAP PVCs were checked by the uninstall script.
+- RESULT=PASS
+- UNINSTALL_COMPLETE
+
+Note:
+The uninstall script reported that the local bootstrap registry cap-registry was not found. This is expected for the GKE cloud target and was not treated as a failure; the bootstrap registry is a local-development artifact, not a cloud installation resource.
+
+Raw machine-generated evidence:
+- before.txt
+- after.txt
