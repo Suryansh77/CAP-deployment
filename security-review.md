@@ -2,41 +2,53 @@
 
 ## 1. Scope
 
-This document records the security model and evidence for deploying Cap into a
-regulated, shared Kubernetes environment.
+This document records the security model and verification evidence for deploying the self-hosted Cap application into a regulated, shared Kubernetes environment.
 
-The customer requirements driving this review are:
+The design is based on the customer constraints described in the assignment:
 
-- No cluster-admin access for the FDE.
-- Namespace-scoped deployment.
-- Default-deny egress.
-- All egress through the customer proxy.
-- TLS interception by the proxy.
-- Customer CA trust.
-- Private registry only.
-- Cluster admission controls.
-- No-egress runners.
-- No data leaving the customer network.
-- No telemetry or license-check traffic.
+- The FDE does not receive cluster-admin access.
+- The workload operates within a customer-provided namespace.
+- Network communication starts from a default-deny posture.
+- External application egress is mediated by the customer egress proxy.
+- The proxy performs customer-style TLS interception.
+- The customer CA is trusted for the intercepted connection.
+- Runtime images come from the customer-controlled private registry.
+- Kubernetes admission enforces the private-registry requirement.
+- Application identities use least privilege.
+- Application data remains inside the customer environment unless an explicitly approved dependency requires external access.
+- Baseline telemetry and license-check traffic are not configured.
+- Application source is not modified for the Kubernetes deployment.
 
-The application source itself is not modified as part of the Kubernetes
-deployment.
+The security model is implemented through multiple independent controls rather than relying on application convention.
 
 ---
 
 ## 2. Security Boundaries
 
-The deployment is separated into four main boundaries:
+The deployment is divided into the following security boundaries:
 
 1. Kubernetes identity and authorization.
-2. Network traffic between workloads.
-3. Outbound traffic leaving the cluster/network.
-4. Container image supply chain.
+2. Application and platform network traffic.
+3. External egress through the customer proxy.
+4. Runtime software supply chain.
+5. Stateful application data.
+6. Administrative and infrastructure lifecycle.
 
-The Kubernetes application identity is intentionally more restricted than the
-deployment identity.
+The primary Kubernetes workload runs in:
 
-The customer platform team remains responsible for cluster-wide controls.
+```text
+cap
+```
+
+The customer egress proxy runs separately in:
+
+```text
+customer-egress
+```
+
+The customer platform team remains responsible for cluster-wide controls such as shared cluster infrastructure, identity integration, the customer registry service, and platform-level admission/network controls.
+
+The FDE deployment is deliberately designed not to depend on cluster-admin privileges.
 
 ---
 
@@ -46,39 +58,43 @@ The customer platform team remains responsible for cluster-wide controls.
 
 Cap application workloads use:
 
-    ServiceAccount/cap
+```text
+ServiceAccount/cap
+```
 
 The ServiceAccount is configured with:
 
-    automountServiceAccountToken: false
+```text
+automountServiceAccountToken: false
+```
 
 The application ServiceAccount is not bound to the deployment Role.
 
-Reason:
+### Reason
 
 Cap does not require Kubernetes API access for normal application operation.
 
-Providing an API token would increase the attack surface without providing
-application functionality required by the deployment.
+Providing an API token would increase the attack surface without providing application functionality required by the deployment.
 
-Verification performed:
-
-    kubectl get serviceaccount cap -n cap \
-      -o jsonpath='automountServiceAccountToken={.automountServiceAccountToken}{"\n"}'
+### Verification
 
 Observed:
 
-    automountServiceAccountToken=false
+```text
+automountServiceAccountToken=false
+```
 
-Authorization checks for the application identity also returned `no` for:
+Authorization checks for the application identity returned `no` for the tested Kubernetes resources, including:
 
-- get Pods
-- get Secrets
-- get Nodes
+- Pods;
+- Secrets; and
+- Nodes.
 
 Evidence:
 
-    verification/logs/rbac-verification.txt
+```text
+verification/logs/rbac-verification.txt
+```
 
 ---
 
@@ -86,72 +102,66 @@ Evidence:
 
 Deployment and namespace-scoped operational actions use:
 
-    system:serviceaccount:cap:cap-deployer
+```text
+system:serviceaccount:cap:cap-deployer
+```
 
 The identity is bound through:
 
-    Role/cap-deployer
+```text
+Role/cap-deployer
+RoleBinding/cap-deployer
+```
 
-    RoleBinding/cap-deployer
+Both are namespaced to:
 
-Both objects are namespaced to:
+```text
+cap
+```
 
-    cap
+The Helm workload does not create a:
 
-The Helm chart renders:
+```text
+ClusterRole
+ClusterRoleBinding
+```
 
-    Role
+### Reason
 
-    RoleBinding
-
-It does not render:
-
-    ClusterRole
-
-    ClusterRoleBinding
-
-Verification:
-
-    grep -E '^kind: (Role|RoleBinding|ClusterRole|ClusterRoleBinding)$' \
-      /tmp/cap-rendered.yaml
-
-Observed:
-
-    kind: Role
-
-    kind: RoleBinding
+The customer provides namespace-scoped access on a shared cluster. The deployment must therefore operate entirely within the granted namespace boundary.
 
 ---
 
 ## 4. RBAC Permission Review
 
-The deployment Role grants only permissions required to manage the Cap Helm
-release and to perform namespace-scoped operational verification.
+The deployment Role provides only the namespace-scoped permissions required to install, manage, and diagnose the Cap workload.
 
-| API group | Resource | Verbs | Justification |
+| API group | Resource | Verbs | Security justification |
 |---|---|---|---|
-| core | configmaps | get, list, watch, create, update, patch, delete | Helm-managed configuration |
-| core | secrets | get, list, watch, create, update, patch, delete | Helm-managed application secrets/configuration |
-| core | services | get, list, watch, create, update, patch, delete | Application service lifecycle |
-| core | serviceaccounts | get, list, watch, create, update, patch, delete | Required ServiceAccounts |
-| core | persistentvolumeclaims | get, list, watch, create, update, patch, delete | Persistent workload storage |
-| apps | deployments | get, list, watch, create, update, patch, delete | Cap web/media workloads |
-| apps | statefulsets | get, list, watch, create, update, patch, delete | MySQL and MinIO workloads |
-| batch | jobs | get, list, watch, create, update, patch, delete | MinIO setup Job |
-| networking.k8s.io | ingresses | get, list, watch, create, update, patch, delete | Application ingress |
-| networking.k8s.io | networkpolicies | get, list, watch, create, update, patch, delete | Application network controls |
-| core | pods | get, list, watch | Deployment verification and diagnosis |
+| core | configmaps | get, list, watch, create, update, patch, delete | Helm-managed non-sensitive configuration |
+| core | secrets | get, list, watch, create, update, patch, delete | Helm-managed sensitive configuration |
+| core | services | get, list, watch, create, update, patch, delete | Application Service lifecycle |
+| core | serviceaccounts | get, list, watch, create, update, patch, delete | Required workload identities |
+| core | persistentvolumeclaims | get, list, watch, create, update, patch, delete | Stateful workload storage |
+| apps | deployments | get, list, watch, create, update, patch, delete | Cap Web and Media Server |
+| apps | statefulsets | get, list, watch, create, update, patch, delete | MySQL and MinIO |
+| batch | jobs | get, list, watch, create, update, patch, delete | MinIO initialization |
+| networking.k8s.io | ingresses | get, list, watch, create, update, patch, delete | Cap Web external entry point |
+| networking.k8s.io | networkpolicies | get, list, watch, create, update, patch, delete | Explicit network isolation |
+| core | pods | get, list, watch | Verification and diagnosis |
 | core | events | get, list, watch | Namespace-scoped troubleshooting |
 | core | pods/log | get | Namespace-scoped log inspection |
 
-No permission is granted for:
+No permissions are granted for:
 
-- Nodes.
-- Namespaces.
-- ClusterRoles.
-- ClusterRoleBindings.
-- PersistentVolumes.
-- Resources in other namespaces.
+- Nodes;
+- Namespaces;
+- ClusterRoles;
+- ClusterRoleBindings;
+- PersistentVolumes; or
+- resources in unrelated namespaces.
+
+Broad built-in `edit`, `admin`, or cluster-admin access is intentionally avoided.
 
 ---
 
@@ -159,661 +169,683 @@ No permission is granted for:
 
 ### Positive authorization
 
-The following operations returned `yes` for `cap-deployer`:
+Verified operations for `cap-deployer` returned:
 
-    create deployments: yes
-
-    patch secrets: yes
-
-    create networkpolicies: yes
-
-    get pods: yes
-
-    get pods/log: yes
-
-Commands used:
-
-    DEPLOYER="system:serviceaccount:cap:cap-deployer"
-
-    kubectl auth can-i create deployments --as="$DEPLOYER" -n cap
-
-    kubectl auth can-i patch secrets --as="$DEPLOYER" -n cap
-
-    kubectl auth can-i create networkpolicies --as="$DEPLOYER" -n cap
-
-    kubectl auth can-i get pods --as="$DEPLOYER" -n cap
-
-    kubectl auth can-i get pods/log --as="$DEPLOYER" -n cap
+```text
+create deployments: yes
+patch secrets: yes
+create networkpolicies: yes
+get pods: yes
+get pods/log: yes
+```
 
 ### Cluster-scope denial
 
-The following operations returned `no`:
+Verified operations returned:
 
-    get nodes: no
-
-    create namespaces: no
-
-    create clusterroles: no
-
-    create clusterrolebindings: no
-
-    get persistentvolumes: no
-
-Commands:
-
-    kubectl auth can-i get nodes --as="$DEPLOYER"
-
-    kubectl auth can-i create namespaces --as="$DEPLOYER"
-
-    kubectl auth can-i create clusterroles --as="$DEPLOYER"
-
-    kubectl auth can-i create clusterrolebindings --as="$DEPLOYER"
-
-    kubectl auth can-i get persistentvolumes --as="$DEPLOYER"
+```text
+get nodes: no
+create namespaces: no
+create clusterroles: no
+create clusterrolebindings: no
+get persistentvolumes: no
+```
 
 ### Cross-namespace denial
 
-The following operations returned `no`:
+Verified operations returned:
 
-    get pods in kube-system: no
-
-    get secrets in kube-system: no
-
-    get pods in default: no
-
-Commands:
-
-    kubectl auth can-i get pods --as="$DEPLOYER" -n kube-system
-
-    kubectl auth can-i get secrets --as="$DEPLOYER" -n kube-system
-
-    kubectl auth can-i get pods --as="$DEPLOYER" -n default
+```text
+get pods in kube-system: no
+get secrets in kube-system: no
+get pods in default: no
+```
 
 ### Application identity denial
 
 The application ServiceAccount returned:
 
-    automountServiceAccountToken=false
+```text
+automountServiceAccountToken=false
+```
 
-Authorization checks returned:
+The tested application API operations returned:
 
-    app SA get pods: no
+```text
+app SA get pods: no
+app SA get secrets: no
+app SA get nodes: no
+```
 
-    app SA get secrets: no
+### Evidence
 
-    app SA get nodes: no
+```text
+verification/logs/rbac-verification.txt
+```
 
-Full evidence:
-
-    verification/logs/rbac-verification.txt
+These tests demonstrate that the deployment identity can perform its intended namespace-scoped duties without receiving unrelated cluster privileges.
 
 ---
 
 ## 6. Container Security
 
-The deployment deliberately applies non-root security controls.
+The deployment applies explicit runtime hardening where compatible with the upstream images.
 
-The Cap web and media-server containers are configured with explicit non-root
-UID/GID settings.
+### Cap Web and Media Server
 
-The MinIO setup Job is also explicitly hardened:
+The workload uses explicit numeric non-root identities and:
 
-- runAsNonRoot: true
-- runAsUser: 1000
-- runAsGroup: 1000
-- allowPrivilegeEscalation: false
-- all Linux capabilities dropped
-- seccomp profile: RuntimeDefault
-- ServiceAccount token automount disabled
+```text
+runAsNonRoot: true
+allowPrivilegeEscalation: false
+```
 
-The MinIO setup Job initially failed because the non-root `mc` process attempted
-to create its configuration directory under `/.mc`.
+where required by the deployment security policy.
 
-The first remediation was to set:
+This was introduced after the original workload exposed an enforcement issue:
 
-    HOME=/tmp
+- Cap Web used a named user that could not satisfy the cluster's static non-root check.
+- Media Server initially ran as root.
 
-A second failure exposed an incorrect use of the `mc ready` command. The hook
-was attempting to use a raw endpoint instead of a configured `mc` alias.
+The images were not modified. Kubernetes security context was used to meet the platform requirement.
 
-The final sequence is:
+### MinIO setup Job
 
-    mc alias set capminio
+The hardened MinIO setup Job uses:
 
-    mc ready capminio
+- non-root UID/GID;
+- `runAsNonRoot: true`;
+- `allowPrivilegeEscalation: false`;
+- all Linux capabilities dropped;
+- `RuntimeDefault` seccomp;
+- disabled ServiceAccount token automount;
+- writable temporary HOME for the non-root client.
 
-    mc mb capminio/cap --ignore-existing
+The MinIO setup Job initially failed because `mc` attempted to create configuration below `/.mc`.
 
-The corrected sequence was manually validated inside the failing hook pod.
+The remediation was:
 
-The final Helm upgrade completed successfully as release revision 8.
+```text
+HOME=/tmp
+```
+
+A second failure exposed incorrect use of `mc ready` with a raw endpoint.
+
+The final sequence configures an alias and then performs readiness and bucket operations using that alias.
 
 Evidence:
 
-    verification/logs/minio-setup-hook-failure.txt
+```text
+verification/logs/minio-setup-hook-failure.txt
+```
+
+No privilege escalation was introduced as a workaround.
 
 ---
 
 ## 7. NetworkPolicy
 
-The namespace uses a default-deny ingress and egress model.
+The Cap namespace begins with:
 
-Required internal traffic is explicitly allowed.
+```text
+default-deny ingress
+default-deny egress
+```
 
-Current workload relationships include:
+Only required communication paths are explicitly allowed.
 
-- DNS egress.
-- Web to MySQL.
-- Web to MinIO.
-- Web to media server.
-- Media server to web.
+### Allowed internal paths
+
+- DNS;
+- Ingress to Cap Web;
+- Cap Web to MySQL;
+- Cap Web to MinIO;
+- Cap Web to Media Server;
+- Media Server to Cap Web;
 - MinIO setup Job to MinIO.
-- Corresponding required ingress rules.
 
-Negative connectivity tests were also performed for traffic that should not be
-allowed.
+Where both directions are required, ingress and egress policy objects are represented independently.
 
-A real NetworkPolicy naming error was encountered during implementation:
+### NetworkPolicy implementation failure
 
-An egress policy and an ingress policy were initially given the same object name,
-causing one policy to replace the other.
+During implementation, an ingress and egress policy were initially assigned the same Kubernetes object name.
 
-The directional policies were then separated into unique object names.
+Because NetworkPolicy identity is namespace plus name, the later object replaced the earlier one.
+
+The result was a real communication failure between Media Server and Cap Web.
+
+The final implementation uses unique objects including:
+
+```text
+allow-media-server-to-web
+allow-media-server-to-web-ingress
+```
+
+This incident is retained as evidence of the actual enforcement and troubleshooting process.
 
 Evidence:
 
-    verification/logs/networkpolicy-media-to-web-incident.txt
+```text
+verification/logs/networkpolicy-media-to-web-incident.txt
+```
 
-The incident is retained because it demonstrates a real deployment constraint
-and the resulting diagnosis rather than simply documenting the final state.
+### Security property
+
+MySQL, MinIO, and the Media Server are not exposed through the external ingress.
+
+External application access is limited to Cap Web.
 
 ---
 
-## 8. Egress Review
+## 8. External Egress Security
 
-The customer requires default-deny outbound traffic and wants every required
-external endpoint explicitly identified.
+The external egress model has two layers.
 
-External paths investigated so far include:
+### Layer 1 — Kubernetes network isolation
+
+Application workloads are permitted to reach the customer egress proxy only through explicit NetworkPolicy rules.
+
+Direct unrestricted external access is not permitted.
+
+### Layer 2 — Customer egress proxy
+
+The proxy applies an explicit FQDN and port allowlist.
+
+Each policy entry identifies:
+
+- destination FQDN;
+- port;
+- component;
+- why the destination is needed; and
+- whether the dependency is installation-time or permanent runtime traffic.
+
+The policy source is:
+
+```text
+policies/egress-allowlist.yaml
+```
+
+The proxy records denied CONNECT attempts.
+
+This produces a security boundary that is both preventive and observable.
+
+---
+
+## 9. Customer TLS Interception
+
+The customer egress proxy models the customer's TLS interception requirement.
+
+The proxy terminates TLS and establishes the upstream connection while retaining upstream certificate verification.
+
+The critical configuration is:
+
+```text
+ssl_insecure=false
+```
+
+Therefore upstream certificate verification is not disabled as a workaround.
+
+The customer-style CA used for verification is:
+
+```text
+Zamp Customer Egress CA
+```
+
+The authorized TLS test was performed through the customer egress proxy and verified:
+
+```text
+PROXY_RESPONSE=HTTP/1.1 200 Connection established
+TLS_AUTHORIZED=true
+```
+
+The intercepted certificate was signed by the customer-style CA and the controlled HTTPS endpoint returned:
+
+```text
+HTTP/1.0 200 OK
+CUSTOMER_EGRESS_TLS_TEST_OK
+```
+
+This demonstrates that:
+
+1. application HTTPS can pass through the interception boundary;
+2. the customer CA is trusted;
+3. the proxy participates in the TLS path; and
+4. upstream certificate verification remains enabled.
+
+Evidence is retained under:
+
+```text
+verification/egress/
+verification/logs/
+```
+
+---
+
+## 10. Egress Allowlist Review and Data Boundaries
+
+The baseline deployment intentionally avoids unnecessary external data paths.
 
 ### AWS S3
 
-    FQDN: s3.amazonaws.com
-
-    Port: 443
-
-    Component: Cap web / S3 storage path
-
-    Requirement: Not required for this self-hosted deployment
-
-    What breaks without access: Public S3-backed storage path would not work
-
-    Final state: Blocked
-
-    Classification: Not required / replaced by internal MinIO
-
-Evidence:
-
-    verification/logs/s3-egress-investigation.txt
-
-### Tinybird
-
-    Component: Optional analytics path
-
-    Runtime configuration: TINYBIRD_HOST not configured
-
-    Final state: No baseline external access required
-
-    Classification: Optional / disabled
-
-Evidence:
-
-    verification/logs/tinybird-egress-investigation.txt
-
-### cap.so / Vercel
-
-    Components: Optional rate limiting / Vercel integration paths
-
-    Runtime configuration: Vercel integration not configured
-
-    Final state: No baseline external access required
-
-    Classification: Optional / disabled
-
-Evidence:
-
-    verification/logs/cap-so-vercel-investigation.txt
-
-### Sentry / OpenTelemetry
-
-    Components: tracing / telemetry integration
-
-    Runtime configuration: external exporter endpoints not configured
-
-    Final state: No baseline external telemetry access
-
-    Classification: Disabled
-
-Evidence:
-
-    verification/logs/sentry-otel-egress-investigation.txt
-
-The final environment still requires explicit proxy enforcement, allowlist
-validation, denial-log capture, and full-deny air-gap verification before this
-review can be considered complete.
-
----
-
-## 9. Private Registry and Supply Chain
-
-Customer workload images must come from the customer private registry.
-
-Local customer-like registry:
-
-    host.docker.internal:5001
-
-The five deployed images are:
-
-- Cap web
-- Cap media server
-- MySQL
-- MinIO
-- MinIO mc/setup image
-
-All five are configured to use:
-
-    host.docker.internal:5001
-
-and all five are pinned by immutable `sha256` digest in the local deployment
-values.
-
-The rendered image policy assertion returned:
-
-    PRIVATE_REGISTRY_DIGEST_ASSERTION_OK
-
-The Kubernetes server-side dry run also passed.
-
-The local registry was moved from HTTP to HTTPS with a customer-like CA.
-
-The CA private key is kept outside the repository and registry certificate
-material is excluded through `.gitignore`.
-
-A Kubernetes image-pull test from the private registry succeeded after Moby
-trust was configured.
-
-One platform limitation remains documented: the local Apple Silicon image push
-reported that only available single-platform content was pushed. This is not
-claimed as full multi-architecture preservation.
-
-The complete independent image verification remains a final submission task.
-
----
-
-## 10. Data Crossing Boundaries
-
-### Application traffic
-
-The primary Cap application data paths are intended to remain internal to the
-Kubernetes environment:
-
-    Cap web → MySQL
-
-    Cap web → MinIO
-
-    Cap web → media server
-
-    media server → Cap web
-
-### Object storage
+```text
+FQDN: s3.amazonaws.com
+Port: 443
+Component: S3 storage path
+Classification: not required for baseline
+State: blocked
+Replacement: internal MinIO
+```
 
 The self-hosted deployment uses internal MinIO rather than public S3.
 
-### External telemetry
+Evidence:
 
-External telemetry is not configured in the current deployment.
+```text
+verification/logs/s3-egress-investigation.txt
+```
 
-### External SaaS integrations
+### Tinybird
 
-Optional Tinybird, cap.so/Vercel, and external S3 paths were investigated and
-are not required for the baseline self-hosted deployment.
+Tinybird is an optional analytics integration and is not configured in the baseline.
 
-A final proxy-controlled egress test remains required to prove that the
-environment, rather than application convention, prevents unauthorized
-external traffic.
+No Tinybird host or token is configured and no external Tinybird destination is required for the baseline workload.
+
+Evidence:
+
+```text
+verification/logs/tinybird-egress-investigation.txt
+```
+
+### Cap.so / Vercel
+
+Optional Cap Cloud/Vercel-specific functionality is not required by the baseline.
+
+No baseline access is granted to:
+
+```text
+cap.so
+api.vercel.com
+```
+
+Evidence:
+
+```text
+verification/logs/cap-so-vercel-investigation.txt
+```
+
+### Sentry / OpenTelemetry
+
+External Sentry and OTLP exporter traffic is not configured in the baseline.
+
+No Sentry DSN or external OTLP exporter endpoint is required for the selected self-hosted deployment.
+
+Evidence:
+
+```text
+verification/logs/sentry-otel-egress-investigation.txt
+```
+
+### Baseline data boundary
+
+The intended application data paths are:
+
+```text
+Cap Web -> MySQL
+Cap Web -> MinIO
+Cap Web -> Media Server
+Media Server -> Cap Web
+```
+
+Persistent application state therefore remains inside the customer Kubernetes environment.
+
+The baseline does not intentionally send application data, telemetry, or license-check traffic to public external control-plane services.
 
 ---
 
-## 11. Admission Control
+## 11. Private Registry and Supply Chain
+
+The runtime image boundary is enforced at both deployment and admission time.
+
+### Runtime images
+
+The runtime inventory includes:
+
+- Cap Web;
+- Cap Media Server;
+- MySQL;
+- MinIO;
+- MinIO Client setup image; and
+- customer egress proxy.
+
+### Build-stage images
+
+The upstream build process was also inspected for build-stage images, including:
+
+- `oven/bun:1.4.0-alpine`;
+- `oven/bun:1.4.0`; and
+- `node:24-alpine`.
+
+These are build dependencies and are not deployed as runtime workloads.
+
+### Private registry
+
+The local constrained environment uses:
+
+```text
+host.docker.internal:5001
+```
+
+The cloud deployment promotes the required runtime artifacts into GCP Artifact Registry.
+
+Runtime workloads use immutable digest-pinned image references.
+
+### Image verification
+
+The local and cloud installation paths verify that runtime workloads reference the approved private registry rather than public registries.
+
+The final cloud workload was inspected and its runtime images referenced the private Artifact Registry with immutable digests.
+
+Evidence:
+
+```text
+verification/image-inventory.md
+verification/image-verification.md
+verification/logs/private-registry-promotion.txt
+verification/logs/private-registry-final-verification.txt
+```
+
+### Private registry TLS
+
+The initial local image pull exposed a transport mismatch:
+
+```text
+http: server gave HTTP response to HTTPS client
+```
+
+The registry was then moved to HTTPS with a customer-style CA rather than weakening the runtime with an insecure-registry exception.
+
+Evidence:
+
+```text
+verification/logs/private-registry-pull-failure.txt
+verification/logs/private-registry-pull-success.txt
+```
+
+The local Apple Silicon registry copy is single-platform; the implementation does not make a false multi-architecture claim for that local copy.
+
+---
+
+## 12. Admission Control
+
+The private-registry requirement is independently enforced through Kubernetes admission.
 
 ### Control
 
-The deployment uses Kubernetes-native:
+The deployment uses:
 
-    ValidatingAdmissionPolicy
+```text
+ValidatingAdmissionPolicy
+ValidatingAdmissionPolicyBinding
+```
 
-and:
+named:
 
-    ValidatingAdmissionPolicyBinding
+```text
+cap-private-registry
+```
 
-The policy and binding are both named:
-
-    cap-private-registry
-
-### Security requirement
-
-The policy enforces that every container image admitted into the `cap`
-namespace comes from the approved private registry:
-
-    host.docker.internal:5001/
-
-The validation covers:
-
-    spec.containers
-
-    spec.initContainers
-
-    spec.ephemeralContainers
-
-This prevents an unapproved image from being introduced through a normal
-container, init container, or ephemeral container.
+The policy is scoped to the Cap namespace.
 
 ### Enforcement
 
 The policy uses:
 
-    failurePolicy: Fail
+```text
+failurePolicy: Fail
+validationActions: [Deny]
+```
 
-The binding uses:
+The validation covers:
 
-    validationActions:
-      - Deny
+- `spec.containers`;
+- `spec.initContainers`; and
+- `spec.ephemeralContainers`.
 
-The policy is scoped to the `cap` namespace using the namespace selector:
+This prevents a public auxiliary image from bypassing the main image restriction.
 
-    kubernetes.io/metadata.name=cap
+### Implementation correction
 
-### Implementation issue and remediation
+The initial CEL implementation attempted to concatenate typed container lists.
 
-The first policy expression attempted to concatenate the container lists with
-CEL `+`.
+The Kubernetes API returned a type-checking warning because the list addition was not valid for those typed fields.
 
-The Kubernetes API reported a type-checking warning because the required list
-addition overload was not valid for the typed Pod fields.
+The policy was rewritten to evaluate each container collection independently.
 
-The validation was rewritten to evaluate `containers`, `initContainers`, and
-`ephemeralContainers` independently.
+The corrected version passed server-side validation without expression warnings.
 
-A subsequent server-side Helm dry run completed without expression warnings.
+### Negative verification
 
-The corrected policy was installed successfully as Helm revision 10.
+A public image:
 
-Live verification returned:
+```text
+busybox:1.36
+```
 
-    observedGeneration=2
+was rejected with:
 
-The binding returned:
+```text
+Error from server (Forbidden)
+```
 
-    validationActions=["Deny"]
+The rejected Pod was subsequently confirmed absent.
 
-The expression warning check returned no warnings.
+### Positive verification
 
-### Negative test — public main image
+A private digest-pinned image was accepted and the Pod was created successfully.
 
-A test Pod using:
+### Init-container bypass verification
 
-    busybox:1.36
+A Pod with a private main image and public `busybox:1.36` init container was rejected.
 
-was submitted to the `cap` namespace.
+The rejected Pod was subsequently confirmed absent.
 
-The API server rejected it with:
+### Live policy state
 
-    Error from server (Forbidden)
+The corrected policy was observed with:
 
-The rejection explicitly referenced the:
+```text
+observedGeneration=2
+validationActions=["Deny"]
+```
 
-    ValidatingAdmissionPolicy 'cap-private-registry'
+and no expression warnings.
 
-policy.
+Evidence:
 
-A follow-up `kubectl get pod` returned `NotFound`, confirming that the Pod was
-not created.
-
-Result:
-
-    PASS
-
-### Positive test — private image
-
-A test Pod using the private digest-pinned image:
-
-    host.docker.internal:5001/cap/minio-mc@sha256:37d109dddbbb2c95873f5fc81ac93f37023264770fc580a7564148892087b1b7
-
-was accepted.
-
-Observed:
-
-    pod/admission-private-test created
-
-The container subsequently exited, but the admission result was successful
-because the Kubernetes API accepted and created the Pod.
-
-Result:
-
-    PASS
-
-### Negative test — public init-container bypass
-
-A test Pod used:
-
-- a compliant private image for the main container
-- `busybox:1.36` for the init container
-
-The API server rejected the request with the same private-registry policy
-message.
-
-A subsequent lookup confirmed that the Pod was not created.
-
-Result:
-
-    PASS
-
-This demonstrates that a public init-container image cannot bypass the
-private-registry admission control.
-
-### Evidence
-
-Full admission-control verification is archived in:
-
-    verification/logs/admission-control-verification.txt
+```text
+verification/logs/admission-control-verification.txt
+verification/logs/cloud-final-admission-policy.yaml
+```
 
 ---
 
-## 12. Customer Responsibility Boundary
+## 13. Customer Egress Proxy Security
 
-The customer platform team owns cluster-wide controls.
+The customer egress proxy runs in:
 
-These include:
+```text
+customer-egress
+```
 
-- cluster-level admission policy
-- shared-cluster infrastructure
-- cluster networking
-- customer registry infrastructure
-- proxy infrastructure
-- certificate authority
-- cluster identity integration
+rather than the Cap application namespace.
 
-The FDE deployment does not require cluster-admin privileges.
+The proxy is hardened with:
 
-The deployment is intentionally designed to work within the namespace and
-permissions granted to the FDE deployment identity.
+- non-root execution;
+- dropped Linux capabilities;
+- read-only root filesystem;
+- RuntimeDefault seccomp;
+- resource controls;
+- disabled ServiceAccount token automount.
 
-## 13. Customer Egress Proxy
+The proxy's upstream trust configuration uses the customer CA and retains upstream verification.
 
-### Security model
+### Authorized path
 
-Outbound access is separated into two controls:
+The authorized TLS path was successfully exercised.
 
-1. Cap Web and Media Server may reach the customer egress proxy on TCP/8080.
-2. Direct external traffic from the Cap namespace is blocked by default-deny NetworkPolicy.
+### Unauthorized path
 
-The proxy then applies an explicit L7 destination allowlist.
+A CONNECT request to:
 
-The proxy and its supporting resources are deployed in the separate:
+```text
+example.com:443
+```
 
-    customer-egress
+was rejected with:
 
-namespace.
+```text
+HTTP/1.1 403 Forbidden
+```
 
-The Cap Helm chart remains environment-neutral. Proxy endpoint and customer-CA settings are supplied through Helm values.
+and the proxy recorded:
 
-### TLS interception
+```text
+EGRESS DENY CONNECT host=example.com port=443
+```
 
-The customer egress proxy terminates client TLS and presents a destination certificate signed by the customer-style egress CA.
+Evidence:
 
-The real `cap-web` workload was used as the verification client.
+```text
+verification/egress/cloud-proxy-denial.txt
+verification/egress/cloud-proxy-denial-log.txt
+verification/logs/proxy-denial.txt
+verification/logs/proxy-denial-log.txt
+```
 
-Observed:
+### Direct bypass
 
-    PROXY_RESPONSE= HTTP/1.1 200 Connection established
-    TLS_AUTHORIZED= true
+The Cap Web workload was also tested without HTTP/HTTPS proxy environment variables.
 
-The intercepted certificate was issued by:
+A direct connection to the external destination failed with a connection-refused result.
 
-    O=Zamp Customer
-    OU=Egress Security
-    CN=Zamp Customer Egress CA
-
-The certificate SAN matched:
-
-    DNS:egress-test.customer-egress.svc.cluster.local
-    DNS:egress-test
-
-The controlled HTTPS endpoint returned:
-
-    HTTP/1.0 200 OK
-    CUSTOMER_EGRESS_TLS_TEST_OK
-
-Upstream TLS verification remained enabled. No insecure certificate bypass was used.
-
-### Unallowlisted destination
-
-A direct CONNECT request from the real `cap-web` workload to:
-
-    example.com:443
-
-through the customer egress proxy returned:
-
-    HTTP/1.1 403 Forbidden
-
-The proxy recorded:
-
-    EGRESS DENY CONNECT host=example.com port=443
-
-This demonstrates L7 deny enforcement for a destination outside the allowlist.
-
-### Direct bypass test
-
-All HTTP and HTTPS proxy environment variables were removed from the `cap-web` process.
-
-The same workload then attempted:
-
-    https://example.com
-
-The connection failed with:
-
-    wget: can't connect to remote host (172.66.147.243:443): Connection refused
-
-This demonstrates that the proxy is not merely a convention. Direct Internet access is independently blocked by NetworkPolicy.
-
-### Evidence
-
-The current proxy evidence is archived under:
-
-    verification/egress/
-
-including:
-
-- `tls-interception-result.txt`
-- `proxy-tls-interception.log`
-- `proxy-deny-example-com.txt`
-- `proxy-deny-log.txt`
-- `direct-bypass.txt`
-- `proxy-deployment.yaml`
-- `proxy-networkpolicies.yaml`
-
-### Verification-only endpoint
-
-The controlled HTTPS endpoint used for TLS-interception validation is classified as:
-
-    phase: verification
-
-It is not a required runtime dependency of the baseline self-hosted Cap deployment.
-
-The permanent runtime allowlist must contain only destinations justified by observed application behavior or an explicit customer requirement.
+This demonstrates that proxy configuration is not merely a convention; the Kubernetes network boundary independently prevents the workload from bypassing the proxy.
 
 ---
 
-## 14. Egress Allowlist Review
+## 14. Cloud Security Verification
 
-The baseline self-hosted deployment uses internal MinIO and does not currently require external runtime egress.
+The cloud environment was provisioned through Terraform and the workload was installed through the cloud installer.
 
-Previously investigated external paths include:
+The cloud deployment verified:
 
-- public AWS S3
-- Tinybird
-- cap.so / Vercel
-- Sentry / OpenTelemetry
+- private runtime image promotion;
+- private digest-pinned workload images;
+- admission policy;
+- final Cap NetworkPolicies;
+- final customer-egress NetworkPolicies;
+- final Cap Pod state;
+- final customer-egress Pod state;
+- ingress behavior;
+- application availability; and
+- customer egress denial behavior.
 
-These remain blocked or disabled in the baseline unless a specific deployment requirement establishes a need.
+Cloud evidence is retained in:
 
-The repository policy source is:
+```text
+verification/logs/cloud-application-serving.txt
+verification/logs/cloud-final-admission-policy.yaml
+verification/logs/cloud-final-cap-networkpolicies.txt
+verification/logs/cloud-final-cap-pods.txt
+verification/logs/cloud-final-egress-networkpolicies.txt
+verification/logs/cloud-final-egress-pods.txt
+verification/logs/cloud-ingress.txt
+verification/egress/cloud-proxy-denial.txt
+verification/egress/cloud-proxy-denial-log.txt
+```
 
-    policies/egress-allowlist.yaml
-
-The intended model is that the policy file is the source of truth and the enforced proxy configuration is generated from it.
-
-The verification-only endpoint must not be promoted into the permanent production allowlist.
+The cloud application reached the deployed Helm state and returned the expected application response.
 
 ---
 
-## 15. Current Security Status
+## 15. Lifecycle Security and Reversibility
 
-### Completed and verified
+### Rollback
 
-- Namespace-scoped RBAC.
-- Positive RBAC authorization.
-- Cluster-scope RBAC denial.
-- Cross-namespace RBAC denial.
-- Application ServiceAccount token isolation.
-- Non-root workload hardening.
-- Runtime securityContext restrictions.
-- Default-deny workload NetworkPolicy baseline.
-- Private registry HTTPS.
-- Private-registry image pull.
-- Digest-pinned private image rendering.
-- External egress investigation.
-- MinIO setup hardening and remediation.
-- Kubernetes-native admission control.
-- Private-registry admission enforcement.
-- Public image rejection.
-- Private image acceptance.
-- Public init-container bypass rejection.
-- Customer egress proxy deployment.
-- Customer CA trust in Cap Web and Media Server.
-- Positive TLS-interception verification from the real Cap Web workload.
-- Proxy denial of an unallowlisted destination.
-- Direct Internet bypass blocked by NetworkPolicy.
+The customer change policy is rollback rather than fix-forward.
 
-### Required before final submission
+A deliberate invalid image digest was used during lifecycle testing to create an `ImagePullBackOff` condition.
 
-- Policy-driven generation of the runtime proxy allowlist.
-- Clean-install proxy denial log.
-- Full-deny proxy air-gap test after installation.
-- No-egress runner proof.
-- Complete independent image verification.
-- Deliberate rollback-from-half-applied-state proof.
-- Complete uninstall/no-leftovers proof.
-- Terraform cloud environment.
-- Successful real-cloud deployment.
-- Final zero-to-working installation recording.
-- Final security/evidence audit.
+The release was then returned to the known-good Helm revision.
+
+The rollback test was performed against the constrained/local Kubernetes deployment.
+
+The architecture does not represent this test as a cloud rollback test.
+
+Evidence:
+
+```text
+verification/lifecycle/rollback/
+```
+
+### Uninstall
+
+The deployment provides:
+
+```text
+./uninstall.sh
+```
+
+The uninstall workflow removes the application workload, customer-egress resources, associated admission resources, and targeted application storage.
+
+Cloud uninstall was executed and verified.
+
+The recorded cloud evidence shows:
+
+```text
+Helm release absent
+cap namespace absent
+customer-egress namespace absent
+ValidatingAdmissionPolicy absent
+ValidatingAdmissionPolicyBinding absent
+remaining Cap/egress namespaces empty
+associated CAP PVCs checked
+RESULT=PASS
+UNINSTALL_COMPLETE
+```
+
+Evidence:
+
+```text
+verification/lifecycle/uninstall/cloud-uninstall-proof.txt
+verification/lifecycle/uninstall/cloud-uninstall-terminal.txt
+```
+
+### Infrastructure teardown
+
+Cloud infrastructure teardown is separate from application uninstall.
+
+The disposable GKE environment was subsequently removed while the unrelated existing cloud environment was preserved.
+
+This keeps the workload lifecycle and infrastructure lifecycle within separate blast-radius boundaries.
+
+---
+
+## Security Conclusion
+
+The current deployment uses layered security controls across identity, network isolation, external egress, TLS interception, software supply chain, admission, and lifecycle management.
+
+The most important security invariants are independently observable:
+
+- application identities do not receive unnecessary Kubernetes API access;
+- the deployment identity is namespace-scoped;
+- default-deny network policy is the baseline;
+- direct external bypass is blocked;
+- external HTTPS is mediated by the customer proxy;
+- upstream TLS verification remains enabled;
+- runtime images are promoted into the private registry and digest-pinned;
+- admission rejects unapproved image sources;
+- baseline external telemetry and unnecessary SaaS dependencies are not configured; and
+- the cloud workload can be cleanly uninstalled with recorded evidence.
+
+The repository evidence under `verification/` is the source of truth for the observed security behavior.

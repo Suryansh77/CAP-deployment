@@ -1,41 +1,82 @@
 # Cap Deployment Runbook
 
+This runbook is written for an operator responsible for deploying and recovering the Cap Kubernetes workload in a constrained customer environment.
+
+The deployment has two supported targets:
+
+- local customer-like Kubernetes environment;
+- GKE cloud environment.
+
+The normal workload lifecycle is:
+
+1. install;
+2. verify;
+3. upgrade when required;
+4. rollback on failure;
+5. uninstall when the workload is no longer required.
+
+The customer change policy is rollback rather than fix-forward.
+
+---
+
 ## 1. Purpose
 
-This runbook describes how Cap is deployed, verified, upgraded, rolled back,
-and removed in a customer-like Kubernetes environment.
+The deployment is designed to be operated without cluster-admin access.
 
-The target customer environment is a shared Kubernetes cluster where the
-customer platform team owns cluster-scoped infrastructure and the Forward
-Deployed Engineer (FDE) operates within an assigned application namespace.
+The normal deployment path uses:
 
-The Cap application source is not modified as part of the Kubernetes
-deployment.
+```text
+./install.sh local
+./install.sh cloud
+```
+
+The local target uses Rancher Desktop/K3s.
+
+The cloud target provisions its required infrastructure with Terraform and installs the workload with Helm.
+
+The upstream Cap application is not modified.
+
+The runbook assumes that the customer environment enforces:
+
+- default-deny network policy;
+- private registry usage;
+- Kubernetes admission controls;
+- namespace-scoped RBAC;
+- controlled external egress; and
+- customer TLS interception.
+
+Do not weaken one of these controls to make an installation succeed.
 
 ---
 
 ## 2. Customer Access Model
 
-The customer provides an existing namespace on the shared Kubernetes cluster.
+The deployment is intended for a shared Kubernetes cluster where the FDE or deployment operator receives access to the Cap namespace but does not receive cluster-admin.
 
-The FDE does not require cluster-admin access.
+The normal identities are:
 
-The customer's platform team owns:
+- application ServiceAccount;
+- namespace-scoped deployment ServiceAccount.
 
-- cluster-wide infrastructure
-- cluster-wide admission controls
-- cluster networking infrastructure
-- the customer private registry
-- cluster-level policy and identity integration
+The application ServiceAccount is not used for deployment administration.
 
-The Cap deployment operates within the assigned application namespace.
+The deployment ServiceAccount is bound only to the namespace-scoped Role required for the workload.
 
-The local customer-like environment may bootstrap cluster-level controls because
-the assignment requires the customer constraints to be reproduced as code.
+The customer egress proxy is operated separately in:
 
-For the customer installation, the namespace is treated as platform-owned
-infrastructure. The application deployment does not require permission to
-create or delete the namespace.
+```text
+customer-egress
+```
+
+The Cap workload is operated in:
+
+```text
+cap
+```
+
+Cluster-wide infrastructure remains the responsibility of the platform team.
+
+Do not request or use cluster-admin as a normal troubleshooting shortcut.
 
 ---
 
@@ -43,535 +84,801 @@ create or delete the namespace.
 
 ### 3.1 Application ServiceAccount
 
-Cap application workloads use the `cap` ServiceAccount.
+The application uses a dedicated ServiceAccount.
 
-The ServiceAccount is configured with:
+Where Kubernetes API access is not required, token automount is disabled:
 
-    automountServiceAccountToken: false
+```text
+automountServiceAccountToken: false
+```
 
-The application ServiceAccount is not bound to the deployment Role.
+The application ServiceAccount should not be granted deployment privileges.
 
-This prevents Cap application workloads from receiving Kubernetes API
-credentials that they do not require.
-
-The application workload therefore has no intended Kubernetes API access.
+The purpose is to reduce the impact of a compromised application container.
 
 ### 3.2 Deployment ServiceAccount
 
-Namespace-scoped deployment and operational actions use:
+Deployment operations use the namespace-scoped:
 
-    system:serviceaccount:cap:cap-deployer
+```text
+cap-deployer
+```
 
-This identity is bound to:
+The identity is bound to the namespace-scoped `cap-deployer` Role and RoleBinding.
 
-    Role/cap-deployer
+It is intended for:
 
-    RoleBinding/cap-deployer
+- workload deployment;
+- Secret management required by the install workflow;
+- NetworkPolicy management within the namespace;
+- Pod inspection;
+- Pod log access; and
+- other namespace-scoped operations explicitly required by the release.
 
-Both resources are namespaced to `cap`.
+It is not intended for:
 
-The Cap chart does not render a ClusterRole or ClusterRoleBinding for this
-identity.
+- node inspection through privileged cluster APIs;
+- namespace creation as a normal application operation;
+- ClusterRole management;
+- ClusterRoleBinding management;
+- unrelated namespace access; or
+- unrelated persistent-volume management.
 
 ---
 
 ## 4. Namespace-Scoped RBAC
 
-The `cap-deployer` Role grants access only to resources required by the Cap
-Helm release inside the `cap` namespace.
+The deployment must remain operable using namespace-scoped privileges.
 
-| API group | Resource | Verbs | Purpose |
-|---|---|---|---|
-| core | configmaps | get, list, watch, create, update, patch, delete | Manage Helm configuration |
-| core | secrets | get, list, watch, create, update, patch, delete | Manage application configuration and secrets |
-| core | services | get, list, watch, create, update, patch, delete | Manage service endpoints |
-| core | serviceaccounts | get, list, watch, create, update, patch, delete | Manage required identities |
-| core | persistentvolumeclaims | get, list, watch, create, update, patch, delete | Manage workload storage |
-| apps | deployments | get, list, watch, create, update, patch, delete | Manage stateless workloads |
-| apps | statefulsets | get, list, watch, create, update, patch, delete | Manage stateful workloads |
-| batch | jobs | get, list, watch, create, update, patch, delete | Manage setup jobs |
-| networking.k8s.io | ingresses | get, list, watch, create, update, patch, delete | Manage ingress |
-| networking.k8s.io | networkpolicies | get, list, watch, create, update, patch, delete | Manage workload network controls |
-| core | pods | get, list, watch | Deployment verification and diagnosis |
-| core | events | get, list, watch | Namespace-scoped troubleshooting |
-| core | pods/log | get | Namespace-scoped log inspection |
+Before a customer change window, verify the deployment identity:
 
-The Role deliberately does not grant permissions for:
+```bash
+kubectl auth can-i create deployments -n cap
+kubectl auth can-i patch secrets -n cap
+kubectl auth can-i create networkpolicies -n cap
+kubectl auth can-i get pods -n cap
+kubectl auth can-i get pods/log -n cap
+```
 
-- Nodes
-- Namespaces
-- ClusterRoles
-- ClusterRoleBindings
-- PersistentVolumes
-- Resources in other namespaces
+These are expected to return:
 
----
+```text
+yes
+```
 
-## 5. RBAC Verification
+Negative checks should be performed before deployment when practical:
 
-RBAC is verified with Kubernetes authorization checks rather than only by
-inspecting the YAML.
+```bash
+kubectl auth can-i get nodes
+kubectl auth can-i create namespaces
+kubectl auth can-i create clusterroles
+kubectl auth can-i create clusterrolebindings
+kubectl auth can-i get persistentvolumes
+kubectl auth can-i get pods -n kube-system
+kubectl auth can-i get secrets -n kube-system
+```
 
-### 5.1 Positive authorization checks
+These are expected to return:
 
-The following identity should be able to perform the required deployment and
-diagnostic operations inside the application namespace:
+```text
+no
+```
 
-    DEPLOYER="system:serviceaccount:cap:cap-deployer"
+The application ServiceAccount should also fail the tested Kubernetes API access checks.
 
-    kubectl auth can-i create deployments --as="$DEPLOYER" -n cap
+Evidence is retained under:
 
-    kubectl auth can-i patch secrets --as="$DEPLOYER" -n cap
+```text
+verification/logs/rbac-verification.txt
+```
 
-    kubectl auth can-i create networkpolicies --as="$DEPLOYER" -n cap
+If a required namespace operation returns `no`, inspect the Role and RoleBinding before changing any permissions.
 
-    kubectl auth can-i get pods --as="$DEPLOYER" -n cap
-
-    kubectl auth can-i get pods/log --as="$DEPLOYER" -n cap
-
-Observed during verification:
-
-    create deployments: yes
-
-    patch secrets: yes
-
-    create networkpolicies: yes
-
-    get pods: yes
-
-    get pods/log: yes
-
-### 5.2 Cluster-scope denial checks
-
-The same deployment identity must not have cluster-wide privileges:
-
-    kubectl auth can-i get nodes --as="$DEPLOYER"
-
-    kubectl auth can-i create namespaces --as="$DEPLOYER"
-
-    kubectl auth can-i create clusterroles --as="$DEPLOYER"
-
-    kubectl auth can-i create clusterrolebindings --as="$DEPLOYER"
-
-    kubectl auth can-i get persistentvolumes --as="$DEPLOYER"
-
-Observed during verification:
-
-    get nodes: no
-
-    create namespaces: no
-
-    create clusterroles: no
-
-    create clusterrolebindings: no
-
-    get persistentvolumes: no
-
-The warnings printed by `kubectl auth can-i` for these resources indicate that
-the queried resource itself is cluster-scoped; the important authorization
-result is `no`.
-
-### 5.3 Cross-namespace isolation
-
-The deployment identity must not access resources in other namespaces:
-
-    kubectl auth can-i get pods --as="$DEPLOYER" -n kube-system
-
-    kubectl auth can-i get secrets --as="$DEPLOYER" -n kube-system
-
-    kubectl auth can-i get pods --as="$DEPLOYER" -n default
-
-Observed during verification:
-
-    no
-
-    no
-
-    no
-
-### 5.4 Application ServiceAccount verification
-
-The application ServiceAccount was checked independently:
-
-    APP_SA="system:serviceaccount:cap:cap"
-
-    kubectl get serviceaccount cap -n cap \
-      -o jsonpath='automountServiceAccountToken={.automountServiceAccountToken}{"\n"}'
-
-Observed:
-
-    automountServiceAccountToken=false
-
-Kubernetes API authorization checks also returned:
-
-    app SA get pods: no
-
-    app SA get secrets: no
-
-    app SA get nodes: no
-
-Complete RBAC verification is archived in:
-
-    verification/logs/rbac-verification.txt
+Do not grant cluster-admin to resolve an RBAC error.
 
 ---
 
-## 6. Private Registry
+## 5. Private Registry
 
-Customer workload images must come from the customer's private registry.
+The customer requirement is that Kubernetes runtime images originate from the approved private registry.
 
-The local customer-like registry is:
+The runtime inventory covers:
 
-    host.docker.internal:5001
+- Cap Web;
+- Cap Media Server;
+- MySQL;
+- MinIO;
+- MinIO Client setup image; and
+- customer egress proxy.
 
-The deployment is intended to use all five application images from this
-private registry:
+For the local target, the customer-like private registry is:
 
-- Cap web
-- Cap media server
-- MySQL
-- MinIO
-- MinIO client/setup image
+```text
+host.docker.internal:5001
+```
 
-All five are pinned by digest.
+For the cloud target, runtime images are promoted to GCP Artifact Registry before installation.
 
-The rendered deployment was explicitly checked to ensure that:
+Runtime images must use immutable digest references.
 
-1. every workload image uses the private registry; and
-2. every workload image uses an `@sha256:` digest.
+Verify rendered Helm images before installation:
 
-The image-policy assertion passed with:
+```bash
+helm template cap helm/cap -n cap -f <values-file>
+```
 
-    PRIVATE_REGISTRY_DIGEST_ASSERTION_OK
+Confirm that runtime images:
 
-Before a customer installation, render and inspect the chart:
+1. use the approved private registry;
+2. contain immutable `sha256` digests; and
+3. do not reference public registries directly.
 
-    helm template cap helm/cap \
-      --namespace cap \
-      -f secrets/local-values.yaml \
-      > /tmp/cap-rendered.yaml
+The repository maintains image inventory and verification evidence under:
 
-    grep -E '^[[:space:]]+image:' /tmp/cap-rendered.yaml
+```text
+verification/image-inventory.md
+verification/image-verification.md
+```
 
-The customer deployment must not fall back to a public registry.
-
----
-
-## 7. Helm Installation
-
-The customer namespace is expected to already exist.
-
-For a namespace where the customer has granted the required deployment
-permissions:
-
-    helm upgrade --install cap helm/cap \
-      --namespace cap \
-      -f secrets/local-values.yaml \
-      --rollback-on-failure \
-      --timeout 10m
-
-A disposable local environment may create its namespace during environment
-bootstrap, but the customer FDE workflow must not depend on cluster-admin
-permission to create the namespace.
+The identified build-stage images are separate from final runtime images. Build bases must not be mistaken for additional runtime workloads.
 
 ---
 
-## 7A. Admission Control
+## 6. Helm Installation
 
-The deployment uses the Kubernetes-native `ValidatingAdmissionPolicy` and
-`ValidatingAdmissionPolicyBinding` to enforce the private-registry invariant
-within the Cap namespace.
+### 6.1 Local installation
 
-The live policy and binding are:
+From the repository root:
 
-    cap-private-registry
+```bash
+./install.sh local
+```
 
-The policy is scoped to the `cap` namespace and uses:
+The local workflow configures the customer-like environment and installs the CAP workload.
 
-    failurePolicy: Fail
+Before installation verify:
 
-The binding enforces:
+```bash
+kubectl config current-context
+kubectl get nodes
+kubectl get storageclass
+kubectl get ingressclass
+```
 
-    validationActions:
-      - Deny
+The expected local environment is Rancher Desktop/K3s with:
 
-The policy validates image sources in:
+```text
+Kubernetes v1.36.4
+local-path
+Traefik
+Moby/Docker
+```
 
-    spec.containers
-    spec.initContainers
-    spec.ephemeralContainers
+### 6.2 Cloud installation
 
-Every image must begin with the approved local/customer registry prefix:
+From the repository root:
 
-    host.docker.internal:5001/
+```bash
+./install.sh cloud
+```
 
-### 7A.1 Policy health verification
+The cloud installer performs the infrastructure and workload bootstrap required for the GKE target.
+
+The sequence includes:
+
+1. Terraform initialization and apply.
+2. GKE credential setup.
+3. Artifact Registry authentication.
+4. Runtime image promotion.
+5. Private digest resolution.
+6. Customer egress CA/TLS generation.
+7. Namespace and Secret/ConfigMap creation.
+8. NetworkPolicy application.
+9. Ingress configuration.
+10. Admission policy application.
+11. Helm rendering validation.
+12. Helm installation.
+13. Application verification.
+14. Customer egress verification.
+
+Cloud installation should be treated as one controlled operation.
+
+Do not manually skip image promotion, admission configuration, NetworkPolicies, or proxy setup just to make the application start.
+
+### 6.3 Helm release inspection
+
+Inspect the release with:
+
+```bash
+helm status cap -n cap
+helm history cap -n cap
+kubectl get pods -n cap -o wide
+kubectl get svc -n cap
+kubectl get ingress -n cap
+```
+
+If installation fails, diagnose the failing layer instead of immediately rerunning the entire operation.
+
+---
+
+## 7. Admission Control
+
+The Cap namespace uses a Kubernetes-native:
+
+```text
+ValidatingAdmissionPolicy
+ValidatingAdmissionPolicyBinding
+```
+
+to enforce the private-registry requirement.
+
+The policy is fail-closed.
+
+The relevant controls include:
+
+```text
+failurePolicy: Fail
+validationActions: [Deny]
+```
+
+The policy covers:
+
+- regular containers;
+- init containers; and
+- ephemeral containers.
+
+### 7.1 Policy health verification
 
 Check:
 
-    kubectl get validatingadmissionpolicy cap-private-registry
+```bash
+kubectl get validatingadmissionpolicy cap-private-registry -o yaml
+kubectl get validatingadmissionpolicybinding cap-private-registry -o yaml
+```
 
-Then:
+Verify the policy is present and enforcing `Deny`.
 
-    kubectl get validatingadmissionpolicy cap-private-registry \
-      -o jsonpath='{.status.typeChecking.expressionWarnings}{"\n"}'
+### 7.2 Public image rejection
 
-Expected:
+A public image should be rejected by the admission layer before the Pod becomes a running workload.
 
-    no expression warnings
+The expected result is an API response containing:
 
-Check the observed generation:
+```text
+Forbidden
+```
 
-    kubectl get validatingadmissionpolicy cap-private-registry \
-      -o jsonpath='observedGeneration={.status.observedGeneration}{"\n"}'
+and the private-registry policy name.
 
-Observed after the final corrected deployment:
+A rejected Pod should not exist afterward.
 
-    observedGeneration=2
+### 7.3 Approved private image
 
-Check enforcement:
+A Pod using an approved private digest-pinned image should pass admission.
 
-    kubectl get validatingadmissionpolicybinding cap-private-registry \
-      -o jsonpath='validationActions={.spec.validationActions}{"\n"}'
+Admission acceptance is independent of whether the test container itself subsequently starts successfully.
 
-Observed:
+### 7.4 Init-container bypass test
 
-    validationActions=["Deny"]
+A workload with:
 
-### 7A.2 Public image rejection
+- compliant private main container;
+- public init-container image
 
-A Pod using the public image:
+must still be rejected.
 
-    busybox:1.36
+This proves that the registry control cannot be bypassed through an init container.
 
-was submitted to the `cap` namespace.
+### 7.5 Policy troubleshooting
 
-The API server rejected the request with:
+If a legitimate workload is rejected:
 
-    Error from server (Forbidden)
+1. inspect the admission error;
+2. inspect the rendered Helm manifest;
+3. verify every container image, including init containers;
+4. verify the registry hostname;
+5. verify the digest reference;
+6. re-run Helm rendering.
 
-The rejection explicitly referenced:
+Do not weaken or disable the admission policy to make a deployment pass.
 
-    ValidatingAdmissionPolicy 'cap-private-registry'
+Admission evidence is retained under:
 
-A follow-up lookup confirmed that the Pod did not exist.
-
-This proves that an unapproved public main-container image is blocked before
-Pod creation.
-
-### 7A.3 Approved private image
-
-A Pod using the private, digest-pinned image:
-
-    host.docker.internal:5001/cap/minio-mc@sha256:37d109dddbbb2c95873f5fc81ac93f37023264770fc580a7564148892087b1b7
-
-was accepted.
-
-Observed:
-
-    pod/admission-private-test created
-
-The container later entered `Error`, but this does not invalidate the admission
-test. The API server accepted and created the Pod.
-
-The temporary test Pod was then deleted.
-
-### 7A.4 Init-container bypass test
-
-A test Pod used:
-
-- a compliant private image for the main container
-- `busybox:1.36` for an init container
-
-The admission policy rejected the request.
-
-The rejected Pod did not exist after the request.
-
-This proves that a public init-container image cannot bypass the main-container
-registry restriction.
-
-### 7A.5 Policy implementation correction
-
-The first policy expression attempted to concatenate the
-`containers`, `initContainers`, and `ephemeralContainers` lists using CEL `+`.
-
-The Kubernetes API reported a type-checking warning because the required list
-addition overload was not valid for the typed Pod fields.
-
-The policy was changed to evaluate each container list independently.
-
-A server-side Helm dry run then completed without expression warnings.
-
-The corrected policy was installed successfully as Helm revision 10.
-
-### 7A.6 Evidence
-
-Complete admission-control verification is archived in:
-
-    verification/logs/admission-control-verification.txt
+```text
+verification/logs/admission-control-verification.txt
+```
 
 ---
 
 ## 8. Deployment Verification
 
-After installation or upgrade:
+After installation, verify the release and workload:
 
-    helm status cap -n cap
+```bash
+helm status cap -n cap
+kubectl get pods -n cap -o wide
+kubectl get svc -n cap
+kubectl get ingress -n cap
+kubectl get networkpolicies -n cap
+```
 
-    kubectl get pods -n cap
+Verify the expected workloads are Ready.
 
-    kubectl get svc -n cap
+Check application logs:
 
-    kubectl get ingress -n cap
+```bash
+kubectl logs -n cap deployment/cap
+kubectl logs -n cap deployment/cap-media-server
+```
 
-    kubectl get pvc -n cap
+Verify runtime images:
 
-The expected Cap workload components are:
+```bash
+kubectl get pods -n cap -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{range .spec.containers[*]}{"  "}{.image}{"\n"}{end}{end}'
+```
 
-- Cap web
-- Cap media server
-- MySQL
-- MinIO
+Expected runtime image properties:
 
-All application pods should reach `Running` and `Ready`.
+- approved private registry;
+- immutable digest;
+- no direct public registry reference.
 
-Ingress verification in the current local environment:
+Verify the application endpoint responds with the expected application result.
 
-    curl -i -H 'Host: cap.local' http://192.168.64.2/
+The cloud verification evidence includes:
 
-The current deployment has historically returned the expected redirect toward
-the Cap login endpoint.
-
----
-
-## 9. MinIO Setup
-
-The MinIO setup Job is a Helm post-install/post-upgrade hook.
-
-The hook:
-
-1. configures the `capminio` MinIO client alias;
-2. waits for MinIO readiness;
-3. creates the configured bucket idempotently;
-4. exits successfully.
-
-The setup Job is deliberately hardened:
-
-- non-root UID/GID 1000
-- `runAsNonRoot: true`
-- `allowPrivilegeEscalation: false`
-- all Linux capabilities dropped
-- `RuntimeDefault` seccomp profile
-- Kubernetes ServiceAccount token automount disabled
-- writable `HOME` set to `/tmp`
-
-This hardened configuration previously exposed two genuine deployment failures.
-
-Those failures and their remediation are retained in the verification evidence.
+```text
+verification/logs/cloud-application-serving.txt
+verification/logs/cloud-final-cap-pods.txt
+verification/logs/cloud-final-egress-pods.txt
+verification/logs/cloud-final-cap-networkpolicies.txt
+verification/logs/cloud-final-egress-networkpolicies.txt
+verification/logs/cloud-final-admission-policy.yaml
+verification/logs/cloud-ingress.txt
+```
 
 ---
 
-## 10. Upgrade and Rollback
+## 9. Customer Egress and TLS Verification
+
+The Cap namespace uses default-deny egress.
+
+External HTTPS traffic must use the customer egress proxy.
+
+The proxy is deployed in:
+
+```text
+customer-egress
+```
+
+Verify the proxy:
+
+```bash
+kubectl get pods -n customer-egress -o wide
+kubectl get svc -n customer-egress
+kubectl get networkpolicies -n customer-egress
+```
+
+The proxy must retain:
+
+```text
+ssl_insecure=false
+```
+
+and use the customer upstream CA.
+
+The verified customer-style CA is:
+
+```text
+Zamp Customer Egress CA
+```
+
+### 9.1 Allowed egress
+
+Test an approved destination through the configured proxy path.
+
+The authorized TLS test should demonstrate:
+
+- connection through the proxy;
+- customer CA presented on the intercepted connection;
+- upstream certificate verification;
+- successful HTTP response.
+
+### 9.2 Denied egress
+
+Test the known unallowlisted destination:
+
+```text
+example.com:443
+```
+
+Expected result:
+
+```text
+HTTP 403 Forbidden
+```
+
+The proxy log should contain:
+
+```text
+EGRESS DENY CONNECT host=example.com port=443
+```
+
+Evidence is retained under:
+
+```text
+verification/egress/
+verification/logs/
+```
+
+### 9.3 Egress troubleshooting
+
+When an external request fails:
+
+1. Confirm the destination is actually required.
+2. Check whether its FQDN and port are present in the approved allowlist.
+3. Verify the workload is allowed to reach the proxy by NetworkPolicy.
+4. Inspect proxy logs.
+5. Confirm the proxy is using the correct upstream CA.
+6. Confirm upstream TLS verification remains enabled.
+7. Check whether the destination is being denied by policy.
+
+Do not:
+
+- add a wildcard Internet allow rule;
+- disable TLS verification;
+- bypass the proxy; or
+- remove the default-deny policy as a diagnostic shortcut.
+
+---
+
+## 10. MinIO Setup
+
+MinIO is initialized through the dedicated MinIO Client setup Job.
+
+The setup sequence is:
+
+1. configure the MinIO client alias;
+2. wait for MinIO readiness;
+3. create the bucket idempotently.
+
+The setup Job uses:
+
+- private registry image;
+- immutable digest;
+- non-root execution;
+- dropped capabilities;
+- RuntimeDefault seccomp;
+- disabled ServiceAccount token automount; and
+- a narrow network path to MinIO.
+
+The non-root Job previously exposed two real failures.
+
+First, the `mc` process attempted to create its configuration directory under `/.mc`.
+
+The resolution was a writable temporary HOME:
+
+```text
+HOME=/tmp
+```
+
+Second, `mc ready` was initially invoked against a raw endpoint rather than a configured alias.
+
+The final sequence uses the configured alias before readiness and bucket operations.
+
+When troubleshooting MinIO initialization:
+
+```bash
+kubectl get pods -n cap
+kubectl get jobs -n cap
+kubectl describe job <job-name> -n cap
+kubectl logs job/<job-name> -n cap
+```
+
+Then inspect the MinIO workload:
+
+```bash
+kubectl get pods -n cap -l app.kubernetes.io/name=minio
+kubectl logs -n cap <minio-pod>
+```
+
+Do not make the MinIO setup Job privileged simply to bypass a filesystem or configuration failure.
+
+---
+
+## 11. Upgrade and Rollback
 
 The customer change policy is rollback rather than fix-forward.
 
-Use:
+Before an upgrade:
 
-    helm upgrade cap helm/cap \
-      --namespace cap \
-      -f secrets/local-values.yaml \
-      --rollback-on-failure \
-      --timeout 10m
+```bash
+helm history cap -n cap
+helm status cap -n cap
+kubectl get pods -n cap
+```
 
-Inspect release history with:
+Record the last known-good revision.
 
-    helm history cap -n cap
+Use the repository's controlled Helm upgrade path rather than changing individual workload objects manually.
 
-A real failed post-upgrade MinIO hook was encountered during implementation.
+A typical Helm upgrade is:
 
-Helm successfully restored the previous working release.
+```bash
+helm upgrade cap helm/cap \
+  --namespace cap \
+  -f <values-file> \
+  --rollback-on-failure \
+  --timeout 10m
+```
 
-The observed release sequence included:
+After the upgrade:
 
-- a failed upgrade caused by the MinIO setup hook
-- automatic rollback to the previous working release
-- a second failed upgrade while diagnosing the hook
-- a subsequent successful upgrade after remediation
+```bash
+helm status cap -n cap
+kubectl get pods -n cap
+kubectl get events -n cap --sort-by=.lastTimestamp
+```
 
-This behavior is retained as evidence because reversibility is an explicit
-assignment requirement.
+### 11.1 Rollback procedure
 
-A deliberate rollback-from-half-applied-state test remains required before final
-submission.
+Identify the last known-good revision:
+
+```bash
+helm history cap -n cap
+```
+
+Then roll back:
+
+```bash
+helm rollback cap <GOOD_REVISION> -n cap --wait --timeout 10m
+```
+
+Verify:
+
+```bash
+helm status cap -n cap
+kubectl get pods -n cap -o wide
+kubectl get ingress -n cap
+```
+
+Verify the application response before declaring recovery complete.
+
+### 11.2 Half-applied release
+
+If a release fails part-way through:
+
+1. do not immediately apply ad-hoc changes;
+2. inspect `helm status`;
+3. inspect `helm history`;
+4. inspect the newest Pods and Events;
+5. identify whether admission, image pull, storage, hook execution, or application startup failed;
+6. return to the last known-good revision when rollback is appropriate.
+
+If a failed revision leaves a stale failed Pod behind, inspect its owner and the current controller state.
+
+A stale failed Pod may need to be removed so that the controller can recreate the healthy replacement from the rolled-back specification.
+
+The rollback evidence is retained under:
+
+```text
+verification/lifecycle/rollback/
+```
+
+The rollback test used a deliberate invalid image digest to create an `ImagePullBackOff` condition and then recovered to a known-good Helm revision.
+
+This evidence demonstrates rollback behavior from a failed release state; it should not be interpreted as a claim that the same deliberate rollback test was performed on the GKE target.
 
 ---
 
-## 11. Uninstall
+## 12. Uninstall
 
-Remove the Helm release with:
+The normal application uninstall entry point is:
 
-    helm uninstall cap -n cap
+```bash
+./uninstall.sh
+```
 
-Verify that application-owned resources are gone.
+The uninstall procedure removes the application deployment resources and customer-egress resources associated with the installation.
 
-The shared customer namespace is platform-owned and must not be deleted by the
-normal customer uninstall procedure.
+It verifies removal of:
 
-The disposable local environment may remove the namespace during complete
-environment teardown.
+- `cap` namespace;
+- `customer-egress` namespace;
+- Cap Helm release;
+- private-registry admission policy and binding;
+- targeted Cap persistent storage.
 
-A complete no-leftovers verification remains required before final submission.
+After uninstall, verify:
+
+```bash
+kubectl get namespace cap
+kubectl get namespace customer-egress
+helm list -A
+kubectl get validatingadmissionpolicy
+kubectl get validatingadmissionpolicybinding
+```
+
+The expected state is that the Cap-specific resources are absent.
+
+The customer private registry is a separate bootstrap dependency and is intentionally preserved by application uninstall.
+
+### 12.1 Cloud uninstall evidence
+
+The cloud uninstall workflow was executed and recorded.
+
+Evidence:
+
+```text
+verification/lifecycle/uninstall/cloud-uninstall-proof.txt
+verification/lifecycle/uninstall/cloud-uninstall-terminal.txt
+```
+
+The evidence records:
+
+- Helm release removed;
+- `cap` namespace removed;
+- `customer-egress` namespace removed;
+- admission policy removed;
+- admission binding removed;
+- remaining Cap/egress namespaces absent;
+- associated CAP PVCs checked; and
+- `RESULT=PASS`.
+
+### 12.2 Complete cloud teardown
+
+Application uninstall and infrastructure teardown are separate operations.
+
+When removing the temporary cloud environment:
+
+1. collect the required installation and verification evidence;
+2. run the workload uninstall;
+3. remove the temporary GKE infrastructure through the infrastructure lifecycle;
+4. verify that the target cluster, networking, registry, and service-account resources are removed;
+5. verify unrelated customer resources remain intact.
+
+The temporary cloud environment was successfully returned to zero state while an unrelated existing GKE environment was preserved.
 
 ---
 
-## 12. Break-Glass
+## 13. Break-Glass and Diagnostic Order
 
-Break-glass access remains a customer platform responsibility.
+Break-glass access is for recovery or diagnostics that cannot be performed through the normal namespace-scoped workflow.
 
-The FDIE should not bypass namespace-scoped controls by requesting or using
-cluster-admin credentials.
+Any temporary privilege increase must be:
 
-Emergency changes must use the customer's approved namespace-scoped access
-path and must be recorded as part of the change process.
+- explicitly authorized;
+- limited to the required scope;
+- time-bounded;
+- recorded; and
+- removed after use.
+
+Do not use cluster-admin as a routine troubleshooting mechanism.
+
+### Diagnostic order
+
+For a failed deployment, inspect the layers in this order:
+
+1. Helm status and rendered configuration.
+2. Pod scheduling and Events.
+3. Container status and logs.
+4. Image pull and private-registry access.
+5. Admission policy.
+6. NetworkPolicies.
+7. Customer egress proxy and allowlist.
+8. Ingress.
+9. Underlying cloud or cluster infrastructure.
+
+### Common symptoms
+
+**`ImagePullBackOff`**
+
+Check:
+
+```bash
+kubectl describe pod <pod> -n cap
+kubectl get events -n cap --sort-by=.lastTimestamp
+```
+
+Determine whether the issue is:
+
+- incorrect registry;
+- incorrect digest;
+- registry TLS/trust;
+- missing private image promotion; or
+- runtime connectivity.
+
+Do not replace a private image with a public image to make the Pod start.
+
+**`Forbidden` during Pod creation**
+
+Inspect the admission response.
+
+Check:
+
+```bash
+kubectl get validatingadmissionpolicy cap-private-registry -o yaml
+kubectl get validatingadmissionpolicybinding cap-private-registry -o yaml
+```
+
+Verify every main and auxiliary image uses the approved private registry.
+
+**`ECONNREFUSED` between workloads**
+
+Do not immediately assume that the destination process is unhealthy.
+
+Check:
+
+```bash
+kubectl get pods -n cap
+kubectl logs -n cap <destination-pod>
+kubectl get networkpolicies -n cap
+```
+
+Verify both sides of the NetworkPolicy path.
+
+A source egress rule alone may be insufficient; destination ingress also needs to permit the connection where the cluster's policy model requires it.
+
+**External HTTPS returns `403`**
+
+Check the proxy log and allowlist first.
+
+An HTTP 403 from the proxy normally means the request reached the proxy but the destination was denied by policy.
+
+**External HTTPS fails certificate validation**
+
+Check:
+
+- customer CA configuration;
+- upstream trusted CA;
+- proxy TLS configuration; and
+- `ssl_insecure=false`.
+
+Do not disable certificate validation as a workaround.
+
+**Application unavailable after a release**
+
+First inspect Helm history and determine whether the current revision is healthy.
+
+During the customer change window, rollback to the last known-good revision before attempting an application-level fix-forward.
 
 ---
 
-## 13. Current Implementation Status
+## Evidence Locations
 
-### Completed and verified
+The primary verification material is stored under:
 
-- Helm workload deployment
-- private-registry HTTPS connectivity
-- Kubernetes image pull from private registry
-- private-registry digest rendering
-- non-root workload hardening
-- default-deny workload NetworkPolicy baseline
-- namespace-scoped RBAC
-- RBAC positive authorization tests
-- RBAC cluster-scope denial tests
-- RBAC cross-namespace denial tests
-- application ServiceAccount isolation
-- Helm rollback after a failed hook
-- MinIO setup hook remediation
-- ValidatingAdmissionPolicy
-- private-registry admission enforcement
-- public image rejection
-- private image acceptance
-- public init-container bypass rejection
+```text
+verification/
+```
 
-### Remaining before final submission
+Important evidence includes:
 
-- complete proxy implementation
-- TLS interception
-- explicit egress allowlist
-- clean-install proxy denial log
-- post-install full-deny air-gap proof
-- no-egress runner
-- complete independent image verification
-- deliberate rollback-from-half-applied-state proof
-- uninstall/no-leftovers proof
-- Terraform cloud target
-- clean installation on the real cloud target
-- one-command end-to-end installation
-- uncut zero-to-working installation recording
-- final documentation and evidence audit
+```text
+verification/image-inventory.md
+verification/image-verification.md
+
+verification/egress/
+verification/logs/
+
+verification/lifecycle/rollback/
+verification/lifecycle/uninstall/
+```
+
+Cloud-specific evidence includes:
+
+```text
+verification/logs/cloud-application-serving.txt
+verification/logs/cloud-final-admission-policy.yaml
+verification/logs/cloud-final-cap-networkpolicies.txt
+verification/logs/cloud-final-cap-pods.txt
+verification/logs/cloud-final-egress-networkpolicies.txt
+verification/logs/cloud-final-egress-pods.txt
+verification/logs/cloud-ingress.txt
+
+verification/egress/cloud-proxy-denial.txt
+verification/egress/cloud-proxy-denial-log.txt
+
+verification/lifecycle/uninstall/cloud-uninstall-proof.txt
+verification/lifecycle/uninstall/cloud-uninstall-terminal.txt
+```
