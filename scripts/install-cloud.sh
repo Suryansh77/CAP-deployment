@@ -50,9 +50,9 @@ docker pull "quay.io/minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321e
 docker tag "quay.io/minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e" "${REGISTRY}/minio:latest"
 docker push "${REGISTRY}/minio:latest"
 
-echo "minio-mc source pull skipped: verified private copy already exists"
-:
-:
+docker pull "quay.io/minio/mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727"
+docker tag "quay.io/minio/mc@sha256:a7fe349ef4bd8521fb8497f55c6042871b2ae640607cf99d9bede5e9bdf11727" "${REGISTRY}/minio-mc:latest"
+docker push "${REGISTRY}/minio-mc:latest"
 
 docker pull "mitmproxy/mitmproxy@sha256:00b77b5d8804c8ad18cb6caefbf9d5849e895e8986c5ce011f4ae30f4385962f"
 docker tag "mitmproxy/mitmproxy@sha256:00b77b5d8804c8ad18cb6caefbf9d5849e895e8986c5ce011f4ae30f4385962f" "${REGISTRY}/mitmproxy:latest"
